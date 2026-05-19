@@ -10,7 +10,7 @@ Para o desenvolvimento desse trabalho foi usado a Linguagem de Programação C.
 - [] Sensores (Sensors)
   Id, id do setor, Tipo do Sensor (temperatura, pressão, vibração, corrente entre outras.), Faixa de leitura de dados.
 - [] Leituras (Inspection)
-   id sensor, valor, data
+  id sensor, valor, data
 
 A relação aqui é Planta contém Setores, Setores contém Sensores, cada planta pode conter vários setores, cada setor pode conter vários sensores (No máximo 3 sensores por setor).
 
@@ -28,4 +28,4 @@ A relação aqui é Planta contém Setores, Setores contém Sensores, cada plant
 - [] Menu
 
 Por fins práticos e custume, eu escolhi desenvolver todo código seguindo com comentários, nome de váriaveis, funções etc 100% em inglês.
-Feito por Marlon Lencina Boeira.
+Feito por Marlon Lencina Boeira e João Gabriel (Also Known as Xaropinho).
