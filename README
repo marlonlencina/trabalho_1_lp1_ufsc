@@ -1,7 +1,7 @@
 Entrega do trabalho 1 (Primeiro) trabalho da matéria de Linguagem de programação ministrado pelo professor Anderson. - UFSC ENC 2026.1.
 Para o desenvolvimento desse trabalho foi usado a Linguagem de Programação C.
 
-# 1. Organização das entidades
+# 1. Organização/Estruturação (Marlon)
 
 - [X] Plantas (Locations)
   Id, Nome, Setores
@@ -14,7 +14,7 @@ Para o desenvolvimento desse trabalho foi usado a Linguagem de Programação C.
 
 A relação aqui é Planta contém Setores, Setores contém Sensores, cada planta pode conter vários setores, cada setor pode conter vários sensores (No máximo 3 sensores por setor) e um sensor irá conter diversas leituras.
 
-## 2. Funcionalidades
+## 2. Funcionalidades (João)
 
 - [] Relatório de setores
 - [] Relatório de leituras (por local e por todos os locais)
@@ -23,8 +23,8 @@ A relação aqui é Planta contém Setores, Setores contém Sensores, cada plant
 - [] Pesquisar sensor por tipo
 - [] Pesquisar setor por descrição
 
-## 3. Extras
-- [] Menu
+## 3. Extras (Marlon)
+- [x] Menu
 
 Por fins práticos e custume, eu escolhi desenvolver todo código seguindo com comentários, nome de váriaveis, funções etc 100% em inglês.
 Feito por Marlon Lencina Boeira e João Gabriel (Also Known as Xaropinho).
