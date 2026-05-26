@@ -71,19 +71,20 @@ struct location {
 int running = true;
 t_location locations[T_MAX_LOCATIONS];
 int locations_quantity = 0;
+const string mapVetorSensorTypeToString[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATION", "PRESSURE", "CURRENT", "HUMIDITY"};
 
 t_location location_selected = { .id = NOT_FOUND };
 t_sector location_sector_selected = { .id = NOT_FOUND };
 t_sensor location_sector_sensor_selected = { .id = NOT_FOUND };
 t_inspection location_sector_sensor_inspection_selected = { .id = NOT_FOUND };
-const string mapVetorSensorTypeToString[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATION", "PRESSURE", "CURRENT", "HUMIDITY"};
 
 // FUNCTIONS TYPES
 void menu_locations(void);
-void action_menu_locations(int option);
 void menu_sectors(void);
-void action_menu_sectors(int option);
 void menu_sensors(void);
+
+void action_menu_locations(int option);
+void action_menu_sectors(int option);
 void action_menu_sensors(int option);
 void action_menu_sensors_inspection(int option);
 
@@ -95,20 +96,19 @@ t_sector createNewSector(void);
 t_sector findSector(int sector_id);
 void listAllSectorsFromLocation(void);
 void selectSector(void);
-void listAllSensorsFromSector(void);
 t_sensor createNewSensor(void);
 t_sensor findSensor(int sensor_id);
+void listAllSensorsFromSector(void);
 void selectSensor(void);
-void listAllInspectionsFromSensor(void);
 t_inspection createNewInspection(void);
 t_inspection findInspection(int inspection_id);
+void listAllInspectionsFromSensor(void);
 void selectInspection(void);
 void removeEnterFromString(string str);
 void resetStatesSelected(entities entity);
 bool checkExistenceId(int id, entities entity);
 void formatStringToSystemPattern(string str);
 t_date convertStringToDate(string date, string hour);
-sensor_types mapNumberToSensor(int n);
 
 int main(){
     srand(time(NULL));
@@ -539,6 +539,11 @@ void formatStringToSystemPattern(string str){
     removeEnterFromString(str);
     formatToUpperString(str);
 }
+// Comentário para o xaropinho:
+// Essa parte de data que ficou uma m*rd*a
+// estarei refazendo ela
+// evitar mexer em funçoes que precisam da data para alguma pesquisa ou relatorio
+// thank you!
 t_date convertStringToDate(string date, string hour){
 
     t_date new_date;
