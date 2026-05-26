@@ -3,6 +3,8 @@ Para o desenvolvimento desse trabalho foi usado a Linguagem de Programação C.
 
 # 1. Organização/Estruturação (Marlon)
 
+- Preencha a Checklist com [X] após feito.
+
 - [X] Plantas (Locations)
   Id, Nome, Setores
 - [X] Setores (Sectors)

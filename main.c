@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#include <stdbool.h>
+#include <stdbool.h> // false e true
 #include <ctype.h>
 
 // DEFINES
@@ -10,10 +10,11 @@
 #define T_MAX_LOCATIONS 5
 #define T_MAX_SECTORS 5
 #define T_MAX_SENSORS 5
-#define T_MAX_INSPECTIONS 5
+#define T_MAX_INSPECTIONS 5 // leituras
+#define T_MAX_SENSORS_TYPES 5
+
 #define END 0
 #define NOT_FOUND -1
-#define T_MAX_SENSORS_TYPES 5
 
 // TYPES
 typedef char string [T_STR];
@@ -31,18 +32,13 @@ typedef enum {
     HUMIDITY
 }  sensor_types;
 struct datetime {
-    int day;
-    int month;
-    int year;
-    int hour;
-    int min;
-    int sec;
-} typedef t_date;
+    string date;
+} typedef t_date_string;
 struct sensor_inspection {
     int id;
     int sensor_id;
     float value;
-    t_date date_inspection;
+    time_t date_inspection;
 } typedef t_inspection;
 struct sensor {
     int id;
@@ -68,15 +64,17 @@ struct location {
 } typedef t_location;
 
 // GLOBAL VARS
+const string map_vetor_sensor_type_to_string[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATION", "PRESSURE", "CURRENT", "HUMIDITY"};
+
 int running = true;
+
 t_location locations[T_MAX_LOCATIONS];
 int locations_quantity = 0;
-const string mapVetorSensorTypeToString[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATION", "PRESSURE", "CURRENT", "HUMIDITY"};
 
-t_location location_selected = { .id = NOT_FOUND };
-t_sector location_sector_selected = { .id = NOT_FOUND };
-t_sensor location_sector_sensor_selected = { .id = NOT_FOUND };
-t_inspection location_sector_sensor_inspection_selected = { .id = NOT_FOUND };
+int location_selected_idx = NOT_FOUND;
+int location_sector_selected_idx = NOT_FOUND;
+int location_sector_sensor_selected_idx = NOT_FOUND;
+int location_sector_sensor_inspection_selected_idx = NOT_FOUND;
 
 // FUNCTIONS TYPES
 void menu_locations(void);
@@ -92,23 +90,32 @@ t_location createNewLocation(void);
 t_location findLocation(int location_id);
 void listAllLocations(void);
 void selectLocation(void);
+int findLocationIdx(int location_id);
+
 t_sector createNewSector(void);
 t_sector findSector(int sector_id);
 void listAllSectorsFromLocation(void);
 void selectSector(void);
+int findSectorIdx(int sector_id);
+
 t_sensor createNewSensor(void);
 t_sensor findSensor(int sensor_id);
 void listAllSensorsFromSector(void);
 void selectSensor(void);
+int findSensorIdx(int sensor_id);
+
 t_inspection createNewInspection(void);
 t_inspection findInspection(int inspection_id);
 void listAllInspectionsFromSensor(void);
 void selectInspection(void);
+int findInspectionIdx(int inspection_id);
+
 void removeEnterFromString(string str);
 void resetStatesSelected(entities entity);
 bool checkExistenceId(int id, entities entity);
 void formatStringToSystemPattern(string str);
-t_date convertStringToDate(string date, string hour);
+void showError(const char *error_message);
+t_date_string convertTimestampToString(time_t timestamp);
 
 int main(){
     srand(time(NULL));
@@ -116,27 +123,22 @@ int main(){
         if(!running){
             return 0;
         }
-    if(
-        location_selected.id != NOT_FOUND &&
-        location_sector_selected.id != NOT_FOUND &&
-        location_sector_sensor_selected.id != NOT_FOUND
-    ){
-        menu_sensors();
-    } else if(
-        location_selected.id != NOT_FOUND &&
-        location_sector_selected.id != NOT_FOUND
-    ){
-        menu_sensors();
-    } else if(
-        location_selected.id != NOT_FOUND
-    ){
-        menu_sectors(); 
-    } else {
-        menu_locations();
+        if(
+            location_selected_idx != NOT_FOUND &&
+            location_sector_selected_idx != NOT_FOUND
+        ){
+            menu_sensors();
+        } else if(
+            location_selected_idx != NOT_FOUND
+        ){
+            menu_sectors(); 
+        } else {
+            menu_locations();
+        }   
     }
-}
     return 0;
 }
+
 //MENU FUNCTIONS
 void menu_locations(){
         int opt;
@@ -155,7 +157,12 @@ void menu_locations(){
 void action_menu_locations(int option){
     switch(option){
             case 1: 
-                locations[locations_quantity] = createNewLocation();
+                if(locations_quantity == T_MAX_LOCATIONS){
+                    showError("Número de plantas máximo atigido.");
+                    break;
+                }
+                int new_index_to_insert = locations_quantity;
+                locations[new_index_to_insert] = createNewLocation();
                 locations_quantity++;
             break;
             case 2: 
@@ -166,7 +173,7 @@ void action_menu_locations(int option){
 }
 void menu_sectors(){
         int opt;
-        printf("Planta: %s. Escolha uma opção (0-9): \n", location_selected.name);
+        printf("Planta: %s. Escolha uma opção (0-9): \n", locations[location_selected_idx].name);
         printf("1. Criar setor. \n");
         printf("2. Listar todos Setores. \n");
         printf("3. Selecionar setor. \n");
@@ -179,8 +186,18 @@ void action_menu_sectors(int option){
         switch (option)
             {
             case 1:
-                location_selected.sectors[location_selected.sectors_quantity] = createNewSector();
-                location_selected.sectors_quantity++;
+                if(locations[location_selected_idx].sectors_quantity == T_MAX_SECTORS){
+                    showError("Número de setores máximo atigido.");
+                    break;
+                }
+
+                int new_index_to_insert = 
+                locations[location_selected_idx].sectors_quantity;
+
+                locations[location_selected_idx]
+                .sectors[new_index_to_insert] = createNewSector();
+
+                locations[location_selected_idx].sectors_quantity++;
                 break;
             case 2:
                 listAllSectorsFromLocation();
@@ -197,18 +214,25 @@ void action_menu_sectors(int option){
 }
 void menu_sensors(){
         int opt;
-        if(location_sector_sensor_selected.id == NOT_FOUND){
-        printf("Setor: %s. Escolha uma opção (0-9): \n", location_sector_selected.name);
+        if(location_sector_sensor_selected_idx == NOT_FOUND){
+        printf("Setor: %s. Escolha uma opção (0-9): \n", 
+            locations[location_selected_idx]
+            .sectors[location_sector_selected_idx].name
+        );
         printf("1. Criar sensor. \n");
-        printf("2. Listar sensor. \n");
+        printf("2. Listar sensores. \n");
         printf("3. Selecionar sensor. \n");
         printf("0. Voltar. \n");
         scanf("%i", &opt);
         getchar();
         action_menu_sensors(opt);
         } else {
-        printf("Sensor: %s. Escolha uma opção (0-9): \n", location_sector_sensor_selected.name);
-        printf("1. Criar leitura do sensor. \n");
+        printf("Sensor: %s. Escolha uma opção (0-9): \n", 
+            locations[location_selected_idx]
+            .sectors[location_sector_selected_idx]
+            .sensors[location_sector_sensor_selected_idx].name
+        );
+        printf("1. Gerar leitura no sensor. \n");
         printf("2. Listar leituras do sensor. \n");
         printf("0. Voltar. \n");
         scanf("%i", &opt);
@@ -220,8 +244,23 @@ void action_menu_sensors(int option){
     switch (option)
         {
             case 1:
-                location_sector_selected.sensors[location_sector_selected.sensors_quantity] = createNewSensor();
-                location_sector_selected.sensors_quantity++;
+                if(locations[location_selected_idx].sectors[location_sector_selected_idx].sensors_quantity == T_MAX_SENSORS){
+                    showError("Número de sensores máximo atigido.");
+                    break;
+                }
+
+                int new_index_to_insert = 
+                locations[location_selected_idx]
+                .sectors[location_sector_selected_idx].sensors_quantity;
+
+                locations[location_selected_idx]
+                .sectors[location_sector_selected_idx]
+                .sensors[new_index_to_insert] = createNewSensor();
+
+                //location_sector_selected.sensors[location_sector_selected.sensors_quantity] = createNewSensor();
+                locations[location_selected_idx]
+                .sectors[location_sector_selected_idx].sensors_quantity++;
+                //location_sector_selected.sensors_quantity++;
                 break;
             case 2:
                 listAllSensorsFromSector();
@@ -240,8 +279,27 @@ void action_menu_sensors_inspection(int option){
     switch (option)
         {  
             case 1:
-                location_sector_sensor_selected.inspections[location_sector_sensor_selected.inspections_quantity] = createNewInspection();
-                location_sector_sensor_selected.inspections_quantity++;
+                if(locations[location_selected_idx]
+                    .sectors[location_sector_selected_idx]
+                    .sensors[location_sector_sensor_selected_idx]
+                    .inspections_quantity == T_MAX_INSPECTIONS){
+                    showError("Número de leituras máximo atigido.");
+                    break;
+                }
+
+                int new_index_to_insert = 
+                locations[location_selected_idx]
+                .sectors[location_sector_selected_idx]
+                .sensors[location_sector_sensor_selected_idx].inspections_quantity;
+
+                locations[location_selected_idx]
+                .sectors[location_sector_selected_idx]
+                .sensors[location_sector_sensor_selected_idx]
+                .inspections[new_index_to_insert] = createNewInspection();
+
+                locations[location_selected_idx]
+                .sectors[location_sector_selected_idx]
+                .sensors[location_sector_sensor_selected_idx].inspections_quantity++;
                 break;
             case 2:
                 listAllInspectionsFromSensor();
@@ -253,6 +311,69 @@ void action_menu_sensors_inspection(int option){
                 break;
         }
 }
+
+int findLocationIdx(int location_id){
+    int idx = NOT_FOUND;
+    for(int i = 0; i < locations_quantity; i++){
+        if(locations[i].id == location_id){
+            idx = i;
+        }
+    }
+    if(idx == NOT_FOUND) printf("Nenhuma location encontrada. \n");
+    return idx;
+};
+int findSectorIdx(int sector_id){
+    int idx = NOT_FOUND;
+    if(location_selected_idx == NOT_FOUND){
+        printf("Impossível executar essa ação sem uma location selecionada. \n");
+        return idx;
+    }
+    for(int i = 0; i < locations[location_selected_idx].sectors_quantity; i++){
+        if(locations[location_selected_idx]
+            .sectors[i].id == sector_id){
+            idx = i;
+        }
+    }
+    if(idx == NOT_FOUND) printf("Nenhum sector encontrada. \n");
+    return idx;
+};
+int findSensorIdx(int sensor_id){
+    int idx = NOT_FOUND;
+    if(location_selected_idx == NOT_FOUND ||
+       location_sector_selected_idx == NOT_FOUND
+    ){
+        printf("Impossível executar essa ação sem um setor selecionado. \n");
+        return idx;
+    }
+    for(int i = 0; i < locations[location_selected_idx].sectors[location_sector_selected_idx].sensors_quantity; i++){
+        if(locations[location_selected_idx]
+            .sectors[location_sector_selected_idx]
+            .sensors[i].id == sensor_id){
+            idx = i;
+        }
+    }
+    if(idx == NOT_FOUND) printf("Nenhum sensor encontrado. \n");
+    return idx;
+};
+int findInspectionIdx(int inspection_id){
+    int idx = NOT_FOUND;
+    if(location_selected_idx == NOT_FOUND ||
+       location_sector_selected_idx == NOT_FOUND ||
+       location_sector_sensor_selected_idx == NOT_FOUND 
+    ){
+        printf("Impossível executar essa ação sem um sensor selecionado. \n");
+        return idx;
+    }
+    for(int i = 0; i < locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections_quantity; i++){
+         if(locations[location_selected_idx]
+            .sectors[location_sector_selected_idx]
+            .sensors[location_sector_sensor_selected_idx]
+            .inspections[i].id == inspection_id){
+            idx = i;
+        }
+    }
+    return idx;
+};
 
 //LOCATION FUNCTIONS
 t_location createNewLocation(void){
@@ -267,11 +388,13 @@ t_location createNewLocation(void){
 }
 t_location findLocation(int location_id){
     t_location location;
+    location.id = NOT_FOUND;
     for(int i = 0; i < locations_quantity; i++){
         if(locations[i].id == location_id){
             location = locations[i];
         }
     }
+    if(location.id == NOT_FOUND) showError("Nenhuma planta encontrado.");
     return location;
 }
 void listAllLocations(void){
@@ -294,15 +417,18 @@ void selectLocation(void){
     scanf("%i", &location_id);
     int locationIsValid = checkExistenceId(location_id, LOCATION);
     if(locationIsValid){
-        location_selected = findLocation(location_id);
+        location_selected_idx = findLocationIdx(location_id);
+    } else {
+        showError("O Id que você inseriu não corresponde a nenhuma planta existente");
     }
 }
 
 //SECTOR FUNCTIONS
 t_sector createNewSector(){
     t_sector new_sector;
-    new_sector.id = location_selected.sectors_quantity + 1;
-    new_sector.location_id = location_selected.id;
+    
+    new_sector.id = locations[location_selected_idx].sectors_quantity + 1;
+    new_sector.location_id = locations[location_selected_idx].id;
     new_sector.sensors_quantity = 0;
     printf("Digite o nome do setor: \n");
     fgets(new_sector.name, T_STR, stdin);
@@ -315,24 +441,26 @@ t_sector createNewSector(){
 }
 t_sector findSector(int sector_id){
     t_sector sector;
-    for(int i = 0; i < location_selected.sectors_quantity; i++){
-        if(location_selected.sectors[i].id == sector_id){
-            sector = location_selected.sectors[i];
+    sector.id = NOT_FOUND;
+    for(int i = 0; i < locations[location_selected_idx].sectors_quantity; i++){
+        if(locations[location_selected_idx].sectors[i].id == sector_id){
+            sector = locations[location_selected_idx].sectors[i];
         }
     }
+    if(sector.id == NOT_FOUND) showError("Nenhum setor encontrado.");
     return sector;
 }
 void listAllSectorsFromLocation(){
-    if(location_selected.sectors_quantity < 1){
+    if(locations[location_selected_idx].sectors_quantity < 1){
         printf("Não existem setores disponíveis. \n");
         return;
     }
-    for(int i = 0; i < location_selected.sectors_quantity; i++){
-        printf("ID: %i,  Nome do setor: %s. \n", location_selected.sectors[i].id, location_selected.sectors[i].name);
+    for(int i = 0; i < locations[location_selected_idx].sectors_quantity; i++){
+        printf("ID: %i,  Nome do setor: %s. \n", locations[location_selected_idx].sectors[i].id, locations[location_selected_idx].sectors[i].name);
     }
 }
 void selectSector(void){
-    if(location_selected.sectors_quantity < 1){
+    if(locations[location_selected_idx].sectors_quantity < 1){
         printf("Não existem setores disponíveis. \n");
         return;
     }
@@ -343,15 +471,17 @@ void selectSector(void){
     scanf("%i", &sector_id);
     int sectorIsValid = checkExistenceId(sector_id, SECTOR);
     if(sectorIsValid){
-        location_sector_selected = findSector(sector_id);
+        location_sector_selected_idx = findSectorIdx(sector_id);
+    } else {
+        showError("O Id que você inseriu não corresponde a nenhum setor existente");
     }
 }
 
 //SENSORS FUNCTIONS
 t_sensor createNewSensor(void){
-     t_sensor new_sensor;
-    new_sensor.id = location_sector_selected.sensors_quantity + 1;
-    new_sensor.sector_id = location_sector_selected.id;
+    t_sensor new_sensor;
+    new_sensor.id = locations[location_selected_idx].sectors[location_sector_selected_idx].sensors_quantity + 1;
+    new_sensor.sector_id = locations[location_selected_idx].sectors[location_sector_selected_idx].id;
     new_sensor.inspections_quantity = 0;
     printf("Digite o nome do sensor: \n");
     fgets(new_sensor.name, T_STR, stdin);
@@ -364,30 +494,46 @@ t_sensor createNewSensor(void){
     printf("4. UMIDADE \n");
     int number_typed;
     scanf("%i", &number_typed);
-    new_sensor.sensor_type = number_typed;
-    printf("Novo sensor (Sensor) Criado com sucesso. \n");
+    getchar();
+    int is_number_typed_valid = number_typed == 0 || number_typed == 1 || number_typed == 2 || number_typed == 3 || number_typed == 4;
+    if(is_number_typed_valid){
+        new_sensor.sensor_type = number_typed;
+        printf("Novo sensor (Sensor) Criado com sucesso. \n");
+    } else {
+        new_sensor.sensor_type = 0;
+        showError("você não digitou um número válido. - Tipo Padrão: Temperatura (0).");
+    }
     return new_sensor;
 }
 t_sensor findSensor(int sensor_id){
     t_sensor sensor;
-    for(int i = 0; i < location_sector_selected.sensors_quantity; i++){
-        if(location_sector_selected.sensors[i].id == sensor_id){
-            sensor = location_sector_selected.sensors[i];
+    sensor.id = NOT_FOUND;
+    for(int i = 0; i < locations[location_selected_idx].sectors[location_sector_selected_idx].sensors_quantity; i++){
+        if(locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[i].id == sensor_id){
+            sensor = locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[i];
         }
     }
+    if(sensor.id == NOT_FOUND) showError("Nenhum sensor encontrado.");
     return sensor;
 }
 void listAllSensorsFromSector(){
-    if(location_sector_selected.sensors_quantity < 1){
+    if(locations[location_selected_idx].sectors[location_sector_selected_idx].sensors_quantity < 1){
         printf("Não existem sensores disponíveis. \n");
         return;
     }
-    for(int i = 0; i < location_sector_selected.sensors_quantity; i++){
-        printf("ID: %i,  Nome do setor: %s., tipo de sensor: %s  \n", location_sector_selected.sensors[i].id, location_sector_selected.sensors[i].name, mapVetorSensorTypeToString[location_sector_selected.sensors[i].sensor_type]);
+    for(int i = 0; i < locations[location_selected_idx].sectors[location_sector_selected_idx].sensors_quantity; i++){
+        printf("ID: %i,  Nome do sensor: %s., tipo de sensor: %s  \n", 
+            locations[location_selected_idx]
+            .sectors[location_sector_selected_idx]
+            .sensors[i].id, locations[location_selected_idx]
+            .sectors[location_sector_selected_idx].sensors[i].name, 
+            map_vetor_sensor_type_to_string[locations[location_selected_idx]
+            .sectors[location_sector_selected_idx]
+            .sensors[i].sensor_type]);
     }
 }
 void selectSensor(void){
-    if(location_sector_selected.sensors_quantity < 1){
+    if(locations[location_selected_idx].sectors[location_sector_selected_idx].sensors_quantity < 1){
         printf("Não existem sensores disponíveis. \n");
         return;
     }
@@ -398,54 +544,60 @@ void selectSensor(void){
     scanf("%i", &sensor_id);
     int sensorIsValid = checkExistenceId(sensor_id, SENSOR);
     if(sensorIsValid){
-        location_sector_sensor_selected = findSensor(sensor_id);
-    }
+        location_sector_sensor_selected_idx = findSensorIdx(sensor_id);
+    } else {
+        showError("O Id que você inseriu não corresponde a nenhum sensor existente");
+    } 
 }
 
 //INSPECTIONS FUNCTIONS
 t_inspection createNewInspection(void){
     t_inspection new_inspection;
-    new_inspection.id = location_sector_sensor_selected.inspections_quantity + 1;
-    new_inspection.sensor_id = location_sector_sensor_selected.id;
+    new_inspection.id = locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections_quantity + 1;
+    new_inspection.sensor_id = locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].id;
     printf("Digite o valor da leitura: \n");
     scanf("%f", &new_inspection.value);
     getchar();
-    string date, hour;
-    printf("Digite a data no formato obrigatório:\nDD/MM/AAAA \n");
-    fgets(date, T_STR, stdin);
-    printf("Digite a hora no formato obrigatório:\n00:00 \n");
-    fgets(hour, T_STR, stdin);
-    new_inspection.date_inspection = convertStringToDate(date, hour);
+    time_t date;
+    time(&date); // pega a data do momento da crianção
+    new_inspection.date_inspection = date;
+    printf("%li.\n", date);
+    printf("Leitura gerada com sucesso. \n");
     return new_inspection;
 }
 t_inspection findInspection(int inspection_id){
     t_inspection inspection;
-    for(int i = 0; i < location_sector_sensor_selected.inspections_quantity; i++){
-        if(location_sector_sensor_selected.inspections[i].id == inspection_id){
-            inspection = location_sector_sensor_selected.inspections[i];
+    inspection.id = NOT_FOUND;
+    for(int i = 0; i < locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections_quantity; i++){
+        if(locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections[i].id == inspection_id){
+            inspection = locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections[i];
         }
     }
+    if(inspection.id == NOT_FOUND) showError("Nenhuma leitura encontrado.");
     return inspection;
 }
 void listAllInspectionsFromSensor(){
-    if(location_sector_sensor_selected.inspections_quantity < 1){
+    if(locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections_quantity < 1){
         printf("Não existem leituras disponíveis. \n");
         return;
     }
-    for(int i = 0; i < location_sector_sensor_selected.inspections_quantity; i++){
-        printf("ID: %i,  Valor: %f., Data: %i/%i/%i, Hora: %i:%i \n", 
-            location_sector_sensor_selected.inspections[i].id, 
-            location_sector_sensor_selected.inspections[i].value, 
-            location_sector_sensor_selected.inspections[i].date_inspection.day,
-            location_sector_sensor_selected.inspections[i].date_inspection.month,
-            location_sector_sensor_selected.inspections[i].date_inspection.year,
-            location_sector_sensor_selected.inspections[i].date_inspection.hour,
-            location_sector_sensor_selected.inspections[i].date_inspection.min
+    for(int i = 0; i < locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections_quantity; i++){
+            
+        t_date_string date_struct = convertTimestampToString(
+            locations[location_selected_idx]
+            .sectors[location_sector_selected_idx]
+            .sensors[location_sector_sensor_selected_idx]
+            .inspections[i].date_inspection);
+
+        printf("ID: %i,  Valor: %f. Data: %s. \n", 
+            locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections[i].id, 
+            locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections[i].value,
+            date_struct.date
         );
     }
 }
 void selectInspection(void){
-    if(location_sector_sensor_selected.inspections_quantity < 1){
+    if(locations[location_selected_idx].sectors[location_sector_selected_idx].sensors[location_sector_sensor_selected_idx].inspections_quantity < 1){
         printf("Não existem leituras disponíveis. \n");
         return;
     }
@@ -456,7 +608,9 @@ void selectInspection(void){
     scanf("%i", &inspection_id);
     int inspectionIsValid = checkExistenceId(inspection_id, INSPECTION);
     if(inspectionIsValid){
-        location_sector_sensor_inspection_selected = findInspection(inspection_id);
+        location_sector_sensor_inspection_selected_idx = findInspectionIdx(inspection_id);
+    } else {
+        showError("O Id que você inseriu não corresponde a nenhuma inspection existente");
     }
 }
 
@@ -465,30 +619,28 @@ void resetStatesSelected(entities entity){
     switch(entity){
         case LOCATION:
                 {
-                t_location location_empty;
-                location_selected = location_empty;
-                location_selected.id = NOT_FOUND;
+                location_selected_idx = NOT_FOUND;
+                location_sector_selected_idx = NOT_FOUND;
+                location_sector_sensor_selected_idx = NOT_FOUND;
+                location_sector_sensor_inspection_selected_idx = NOT_FOUND;
                 break;
                 }
         case SECTOR:
                 {
-                t_sector sector_empty;
-                location_sector_selected = sector_empty;
-                location_sector_selected.id = NOT_FOUND;
+                location_sector_selected_idx = NOT_FOUND;
+                location_sector_sensor_selected_idx = NOT_FOUND;
+                location_sector_sensor_inspection_selected_idx = NOT_FOUND;
                 break;
                 }
         case SENSOR:
                 {
-                t_sensor sensor_empty;
-                location_sector_sensor_selected = sensor_empty;
-                location_sector_sensor_selected.id = NOT_FOUND;
+                location_sector_sensor_selected_idx = NOT_FOUND;
+                location_sector_sensor_inspection_selected_idx = NOT_FOUND;
                 break;
                 }
         case INSPECTION:
                 {
-                t_inspection inspection_empty;
-                location_sector_sensor_inspection_selected = inspection_empty;
-                location_sector_sensor_inspection_selected.id = NOT_FOUND;
+                location_sector_sensor_inspection_selected_idx = NOT_FOUND;
                 break;
                 }
     }
@@ -504,22 +656,32 @@ bool checkExistenceId(int id, entities entity){
             }
             break;
         case SECTOR:
-            for(int i = 0; i < location_selected.sectors_quantity; i++){
-                if(location_selected.sectors[i].id == id){
+            for(int i = 0; i < locations[location_selected_idx].sectors_quantity; i++){
+                if(locations[location_selected_idx].sectors[i].id == id){
                     hasFoundId = 1;
                 }
             }
             break;
         case SENSOR:
-            for(int i = 0; i < location_sector_selected.sensors_quantity; i++){
-                if(location_sector_selected.sensors[i].id == id){
+            for(int i = 0; i < locations[location_selected_idx]
+                .sectors[location_sector_selected_idx]
+                .sensors_quantity; i++){
+                if(locations[location_selected_idx]
+                    .sectors[location_sector_selected_idx]
+                    .sensors[i].id == id){
                     hasFoundId = 1;
                 }
             }
             break;
         case INSPECTION:
-            for(int i = 0; i < location_sector_sensor_selected.inspections_quantity; i++){
-                if(location_sector_sensor_selected.inspections[i].id == id){
+            for(int i = 0; i < locations[location_selected_idx]
+                .sectors[location_sector_selected_idx]
+                .sensors[location_sector_sensor_selected_idx]
+                .inspections_quantity; i++){
+                if(locations[location_selected_idx]
+                    .sectors[location_sector_selected_idx]
+                    .sensors[location_sector_sensor_selected_idx]
+                    .inspections[i].id == id){
                     hasFoundId = 1;
                 }
             }
@@ -539,39 +701,14 @@ void formatStringToSystemPattern(string str){
     removeEnterFromString(str);
     formatToUpperString(str);
 }
-// Comentário para o xaropinho:
-// Essa parte de data que ficou uma m*rd*a
-// estarei refazendo ela
-// evitar mexer em funçoes que precisam da data para alguma pesquisa ou relatorio
-// thank you!
-t_date convertStringToDate(string date, string hour){
-
-    t_date new_date;
-
-    new_date.day =
-        (date[0] - '0') * 10 +
-        (date[1] - '0');
-
-    new_date.month =
-        (date[3] - '0') * 10 +
-        (date[4] - '0');
-
-    new_date.year =
-        (date[6] - '0') * 1000 +
-        (date[7] - '0') * 100 +
-        (date[8] - '0') * 10 +
-        (date[9] - '0');
-
-    new_date.hour =
-        (hour[0] - '0') * 10 +
-        (hour[1] - '0');
-
-    new_date.min =
-        (hour[3] - '0') * 10 +
-        (hour[4] - '0');
-
-    new_date.sec = 0;
-
-    return new_date;
+void showError(const char *error_message){
+    printf("Erro! Mensagem do sistema: %s.\n", error_message);
 }
-
+t_date_string convertTimestampToString(time_t timestamp){
+    t_date_string struct_date;
+    struct tm* tm_info = localtime(&timestamp);
+    char date_str[50];
+    strftime(date_str, sizeof(date_str), "%d/%m/%Y %H:%M:%S", tm_info);
+    strcpy(struct_date.date, date_str);
+    return struct_date;
+}
