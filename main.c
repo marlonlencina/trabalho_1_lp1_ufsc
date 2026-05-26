@@ -13,7 +13,7 @@
 #define T_MAX_INSPECTIONS 5
 #define END 0
 #define NOT_FOUND -1
-
+#define T_MAX_SENSORS_TYPES 5
 
 // TYPES
 typedef char string [T_STR];
@@ -24,7 +24,7 @@ enum entities {
     INSPECTION
 } typedef entities;
 typedef enum {
-    TEMPERATURE,
+    TEMPERATURE = 0,
     VIBRATION,
     PRESSURE,
     CURRENT,
@@ -154,6 +154,7 @@ t_location location_selected = { .id = NOT_FOUND };
 t_sector location_sector_selected = { .id = NOT_FOUND };
 t_sensor location_sector_sensor_selected = { .id = NOT_FOUND };
 t_inspection location_sector_sensor_inspection_selected = { .id = NOT_FOUND };
+const string mapVetorSensorTypeToString[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATION", "PRESSURE", "CURRENT", "HUMIDITY"};
 
 // FUNCTIONS TYPES
 void menu_locations(void);
@@ -185,7 +186,7 @@ void resetStatesSelected(entities entity);
 bool checkExistenceId(int id, entities entity);
 void formatStringToSystemPattern(string str);
 t_date convertStringToDate(string date, string hour);
-sensor_types sensor_to_string(sensor_types sensor);
+sensor_types mapNumberToSensor(int n);
 
 int main(){
     srand(time(NULL));
@@ -460,7 +461,7 @@ void listAllSensorsFromSector(){
         return;
     }
     for(int i = 0; i < location_sector_selected.sensors_quantity; i++){
-        printf("ID: %i,  Nome do setor: %s., tipo de sensor:  \n", location_sector_selected.sensors[i].id, location_sector_selected.sensors[i].name);
+        printf("ID: %i,  Nome do setor: %s., tipo de sensor: %s  \n", location_sector_selected.sensors[i].id, location_sector_selected.sensors[i].name, mapVetorSensorTypeToString[location_sector_selected.sensors[i].sensor_type]);
     }
 }
 void selectSensor(void){
