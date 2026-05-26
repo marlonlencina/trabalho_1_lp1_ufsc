@@ -71,85 +71,7 @@ struct location {
 int running = true;
 t_location locations[T_MAX_LOCATIONS];
 int locations_quantity = 0;
-/*
-t_location locations[T_MAX_LOCATIONS] = {
-    {
-        .id = 1,
-        .name = "UFSC",
-        .sectors = {
-            {
-                .id = 1,
-                .location_id = 1,
-                .name = "Laboratorio IoT",
-                .description = "Setor de sensores inteligentes",
-                .sensors = {
-                    {
-                        .id = 1,
-                        .sector_id = 1,
-                        .name = "Sensor Temperatura",
-                        .inspections = {
-                            {
-                                .id = 1,
-                                .sensor_id = 1,
-                                .value = 25,
-                                .date_inspection = {
-                                    .day = 22,
-                                    .month = 5,
-                                    .year = 2026,
-                                    .hour = 10,
-                                    .min = 30,
-                                    .sec = 0
-                                }
-                            }
-                        },
-                        .inspections_quantity = 1
-                    }
-                },
-                .sensors_quantity = 1
-            }
-        },
-        .sectors_quantity = 1
-    },
-    {
-        .id = 2,
-        .name = "IFSC",
-        .sectors = {
-            {
-                .id = 2,
-                .location_id = 2,
-                .name = "Patio Externo",
-                .description = "Monitoramento ambiental",
-                .sensors = {
-                    {
-                        .id = 2,
-                        .sector_id = 2,
-                        .name = "Sensor Umidade",
-                        .inspections = {
-                            {
-                                .id = 2,
-                                .sensor_id = 2,
-                                .value = 70,
-                                .date_inspection = {
-                                    .day = 22,
-                                    .month = 5,
-                                    .year = 2026,
-                                    .hour = 11,
-                                    .min = 15,
-                                    .sec = 10
-                                }
-                            }
-                        },
-                        .inspections_quantity = 1
-                    }
-                },
-                .sensors_quantity = 1
-            }
-        },
-        .sectors_quantity = 1
-    }
-};
-int locations_quantity = 2;
-*/
+
 t_location location_selected = { .id = NOT_FOUND };
 t_sector location_sector_selected = { .id = NOT_FOUND };
 t_sensor location_sector_sensor_selected = { .id = NOT_FOUND };
@@ -275,8 +197,8 @@ void action_menu_sectors(int option){
 }
 void menu_sensors(){
         int opt;
-        printf("Setor: %s. Escolha uma opção (0-9): \n", location_sector_selected.name);
         if(location_sector_sensor_selected.id == NOT_FOUND){
+        printf("Setor: %s. Escolha uma opção (0-9): \n", location_sector_selected.name);
         printf("1. Criar sensor. \n");
         printf("2. Listar sensor. \n");
         printf("3. Selecionar sensor. \n");
@@ -435,14 +357,14 @@ t_sensor createNewSensor(void){
     fgets(new_sensor.name, T_STR, stdin);
     formatStringToSystemPattern(new_sensor.name);
     printf("Digite o número correspondente ao tipo de sensor: \n");
-    printf("1. TEMPERATURA \n");
-    printf("2. VIBRAÇÃO \n");
-    printf("3. PRESSÃO \n");
-    printf("4. CORRENTE \n");
-    printf("5. UMIDADE \n");
+    printf("0. TEMPERATURA \n");
+    printf("1. VIBRAÇÃO \n");
+    printf("2. PRESSÃO \n");
+    printf("3. CORRENTE \n");
+    printf("4. UMIDADE \n");
     int number_typed;
     scanf("%i", &number_typed);
-    new_sensor.sensor_type = mapNumberToSensor(number_typed);
+    new_sensor.sensor_type = number_typed;
     printf("Novo sensor (Sensor) Criado com sucesso. \n");
     return new_sensor;
 }
@@ -647,21 +569,4 @@ t_date convertStringToDate(string date, string hour){
 
     return new_date;
 }
-sensor_types mapNumberToSensor(int n){
-    switch (n)
-    {
-    case 1:
-    return TEMPERATURE;
-    case 2:
-    return VIBRATION;
-    case 3:
-    return PRESSURE;
-    case 4: 
-    return CURRENT;
-    case 5: 
-    return HUMIDITY;
-    default:
-    printf("Número de sensor inválido, setando TEMPERATURA como padrão.");
-    return TEMPERATURE;
-    }
-}
+
