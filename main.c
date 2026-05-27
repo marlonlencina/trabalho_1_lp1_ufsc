@@ -16,7 +16,6 @@
 #define END 0
 #define NOT_FOUND -1
 
-
 // - TYPES
 typedef char string [T_STR];
 enum entities {
@@ -484,13 +483,11 @@ int findSectorIdx(int sector_id){
 // - SENSORS FUNCTIONS
 t_sensor createNewSensor(void){
     t_sensor new_sensor;
-
     if(locations[location_selected_idx].sectors[sector_selected_idx].sensors_quantity == T_MAX_SENSORS){
         new_sensor.id = NOT_FOUND;
         showError("No máximo 3 sensores por setor.");
         return new_sensor;
     }
-
     new_sensor.id = locations[location_selected_idx].sectors[sector_selected_idx].sensors_quantity + 1;
     new_sensor.sector_id = locations[location_selected_idx].sectors[sector_selected_idx].id;
     new_sensor.inspections_quantity = 0;
@@ -505,10 +502,13 @@ t_sensor createNewSensor(void){
     printf("4. UMIDADE - %% \n");
     int number_typed;
     scanf("%i", &number_typed);
+    getchar();
     printf("Digite o range mínimo do sensor: \n");
     scanf("%f", &new_sensor.range_min); 
+    getchar();
     printf("Digite o range máximo do sensor: \n");
     scanf("%f", &new_sensor.range_max); 
+    getchar();
     int is_number_typed_valid = number_typed == 0 || number_typed == 1 || number_typed == 2 || number_typed == 3 || number_typed == 4;
     if(is_number_typed_valid){
         new_sensor.sensor_type = number_typed;
