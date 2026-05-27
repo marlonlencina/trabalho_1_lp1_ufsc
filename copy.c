@@ -71,7 +71,7 @@ const string sensor_type_string[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATIO
 const string sensor_type_unit[T_MAX_SENSORS_TYPES] = {"°C", "mm/s", "PSI", "A", "%"};
 
 bool running = true;
-bool is_testing = false;
+bool is_testing = true;
 
 t_location locations[T_MAX_LOCATIONS];
 int locations_quantity = 0;
@@ -108,6 +108,7 @@ t_sensor findSensor(int sensor_id);
 void listAllSensorsFromSector(void);
 void selectSensor(void);
 int findSensorIdx(int sensor_id);
+void generate_reports_sensors_reports(void);
 
 t_inspection createNewInspection(void);
 t_inspection findInspection(int inspection_id);
@@ -156,6 +157,7 @@ void menu_locations(){
         printf("1. Criar planta (0-9): \n");
         printf("2. Listar todas plantas (0-9): \n");
         printf("3. Selecionar planta (0-9): \n");
+        printf("4. Gerar relatorio de senores");
         printf("0. Fechar (Sair do programa):. \n");
         scanf("%i", &opt);
         getchar();
@@ -188,6 +190,9 @@ void action_menu_locations(int option){
             break;
             case 3:
                 selectLocation(); 
+            break;
+            case 4:
+                generate_reports_sensors_reports();
             break;
             default: break;
         }
@@ -414,6 +419,67 @@ int findLocationIdx(int location_id){
     if(idx == NOT_FOUND) printf("Nenhuma location encontrada. \n");
     return idx;
 };
+void generate_reports_sensors_reports(void){
+    
+    int option;
+    int sensor_type_option;
+    printf("Escolha um tipo de relatório\n");
+    printf("0.Geral\n");
+    printf("1.Por tipo\n");
+    scanf("%i", &option);
+
+    if(option == 0){
+    for(int i = 0; i < locations_quantity; i++){
+                for(int j = 0; j < locations[i].sectors_quantity; j++){
+                    for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
+                        printf("Id[%i]\n Nome:%s \n Tipo:%s \n Min/Max[%.3f/%.3f] \nTotal de leituras:%i\n", 
+                        locations[i].sectors[j].sensors[k].id,
+                        locations[i].sectors[j].sensors[k].name,
+                        sensor_type_string[locations[i].sectors[j].sensors[k].sensor_type], 
+                        locations[i].sectors[j].sensors[k].range_min, locations[i].sectors[j].sensors[k].range_max,
+                        locations[i].sectors[j].sensors[k].inspections_quantity
+                        );
+
+                    }
+                    printf("\n");
+                }
+            }
+        }else{
+            printf("Qual o tipo do sensor:\n");
+            printf("0. Temperatura\n");
+            printf("1. Vibração\n");
+            printf("2. Pressão\n");
+            printf("3. Corrente\n");
+            printf("4. Umidade\n");
+            scanf("%i", &sensor_type_option);
+
+            for(int i = 0; i < locations_quantity; i++){
+                for(int j = 0; j < locations[i].sectors_quantity; j++){
+                    for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
+                        if( sensor_type_option == locations[i].sectors[j].sensors[k].sensor_type){
+                            printf("Id[%i]\n Nome:%s \n Tipo:%s \n Min/Max[%.3f/%.3f] \nTotal de leituras:%i\n", 
+                                locations[i].sectors[j].sensors[k].id,
+                                locations[i].sectors[j].sensors[k].name,
+                                sensor_type_string[locations[i].sectors[j].sensors[k].sensor_type], 
+                                locations[i].sectors[j].sensors[k].range_min, locations[i].sectors[j].sensors[k].range_max,
+                                locations[i].sectors[j].sensors[k].inspections_quantity
+                                );
+                        }
+
+                    }
+                    printf("\n");
+                }
+            }
+
+
+
+            
+
+        }
+
+
+
+}
 
 // - SECTOR FUNCTIONS
 t_sector createNewSector(){
