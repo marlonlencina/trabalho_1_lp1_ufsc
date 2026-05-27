@@ -10,11 +10,12 @@
 #define T_STR 100
 #define T_MAX_LOCATIONS 5
 #define T_MAX_SECTORS 5
-#define T_MAX_SENSORS 5
+#define T_MAX_SENSORS 3
 #define T_MAX_INSPECTIONS 5
 #define T_MAX_SENSORS_TYPES 5
 #define END 0
 #define NOT_FOUND -1
+
 
 // - TYPES
 typedef char string [T_STR];
@@ -46,6 +47,8 @@ struct sensor {
     string name;
     sensor_types sensor_type;
     t_inspection inspections[T_MAX_INSPECTIONS];
+    float range_min;
+    float range_max;
     int inspections_quantity;
 } typedef t_sensor;
 struct sector {
@@ -65,6 +68,7 @@ struct location {
 
 // GLOBAL VARS
 const string sensor_type_string[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATION", "PRESSURE", "CURRENT", "HUMIDITY"};
+const string sensor_type_unit[T_MAX_SENSORS_TYPES] = {"°C", "mm/s", "PSI", "A", "%"};
 
 bool running = true;
 
@@ -109,6 +113,7 @@ t_inspection findInspection(int inspection_id);
 void listAllInspectionsFromSensor(void);
 void selectInspection(void);
 int findInspectionIdx(int inspection_id);
+int checkQuantityOfInspectionsOnDate(time_t timestamp);
 
 void removeEnterFromString(string str);
 void resetStatesSelected(entities entity);
@@ -116,6 +121,7 @@ bool checkExistenceId(int id, entities entity);
 void formatStringToSystemPattern(string str);
 void showError(const char *error_message);
 t_date_string convertTimestampToString(time_t timestamp);
+bool isSameDay(time_t firstTimestamp, time_t secondTimestamp);
 
 int main(){
     srand(time(NULL));
@@ -144,7 +150,8 @@ void menu_locations(){
         int opt;
         printf("Escolha uma opção (0-9): \n");
         printf("1. Criar planta (0-9): \n");
-        printf("2. Selecionar planta (0-9): \n");
+        printf("2. Listar todas plantas (0-9): \n");
+        printf("3. Selecionar planta (0-9): \n");
         printf("0. Fechar (Sair do programa):. \n");
         scanf("%i", &opt);
         getchar();
@@ -162,11 +169,21 @@ void action_menu_locations(int option){
                     break;
                 }
                 int new_index_to_insert = locations_quantity;
-                locations[new_index_to_insert] = createNewLocation();
+
+                t_location new_location = createNewLocation();
+                if(new_location.id == NOT_FOUND){
+                    showError("Erro na criação.");
+                    break;
+                }
+
+                locations[new_index_to_insert] = new_location;
                 locations_quantity++;
             break;
             case 2: 
-                selectLocation();
+                listAllLocations();
+            break;
+            case 3:
+                selectLocation(); 
             break;
             default: break;
         }
@@ -194,8 +211,14 @@ void action_menu_sectors(int option){
                 int new_index_to_insert = 
                 locations[location_selected_idx].sectors_quantity;
 
+                t_sector new_sector = createNewSector();
+                if(new_sector.id == NOT_FOUND){
+                    showError("Erro na criação.");
+                    break;
+                }
+
                 locations[location_selected_idx]
-                .sectors[new_index_to_insert] = createNewSector();
+                .sectors[new_index_to_insert] = new_sector;
 
                 locations[location_selected_idx].sectors_quantity++;
                 break;
@@ -253,9 +276,16 @@ void action_menu_sensors(int option){
                 locations[location_selected_idx]
                 .sectors[sector_selected_idx].sensors_quantity;
 
+                t_sensor new_sensor = createNewSensor();
+
+                if(new_sensor.id == NOT_FOUND){
+                    showError("Erro na criação.");
+                    break;
+                }
+
                 locations[location_selected_idx]
                 .sectors[sector_selected_idx]
-                .sensors[new_index_to_insert] = createNewSensor();
+                .sensors[new_index_to_insert] = new_sensor;
 
                 locations[location_selected_idx]
                 .sectors[sector_selected_idx].sensors_quantity++;
@@ -290,10 +320,17 @@ void action_menu_sensors_inspection(int option){
                 .sectors[sector_selected_idx]
                 .sensors[sensor_selected_idx].inspections_quantity;
 
+                t_inspection new_inspection = createNewInspection();
+
+                if(new_inspection.id == NOT_FOUND){
+                    showError("Erro na criação.");
+                    break;
+                }
+
                 locations[location_selected_idx]
                 .sectors[sector_selected_idx]
                 .sensors[sensor_selected_idx]
-                .inspections[new_index_to_insert] = createNewInspection();
+                .inspections[new_index_to_insert] = new_inspection;
 
                 locations[location_selected_idx]
                 .sectors[sector_selected_idx]
@@ -334,6 +371,10 @@ t_location findLocation(int location_id){
     return location;
 }
 void listAllLocations(void){
+    if(locations_quantity < 1){
+        printf("Não existem plantas disponíveis. \n");
+        return;
+    }
     for(int i = 0; i < locations_quantity; i++){
         printf("ID: %i, Nome: %s. \n", locations[i].id, locations[i].name);
     }
@@ -443,6 +484,13 @@ int findSectorIdx(int sector_id){
 // - SENSORS FUNCTIONS
 t_sensor createNewSensor(void){
     t_sensor new_sensor;
+
+    if(locations[location_selected_idx].sectors[sector_selected_idx].sensors_quantity == T_MAX_SENSORS){
+        new_sensor.id = NOT_FOUND;
+        showError("No máximo 3 sensores por setor.");
+        return new_sensor;
+    }
+
     new_sensor.id = locations[location_selected_idx].sectors[sector_selected_idx].sensors_quantity + 1;
     new_sensor.sector_id = locations[location_selected_idx].sectors[sector_selected_idx].id;
     new_sensor.inspections_quantity = 0;
@@ -450,21 +498,25 @@ t_sensor createNewSensor(void){
     fgets(new_sensor.name, T_STR, stdin);
     formatStringToSystemPattern(new_sensor.name);
     printf("Digite o número correspondente ao tipo de sensor: \n");
-    printf("0. TEMPERATURA \n");
-    printf("1. VIBRAÇÃO \n");
-    printf("2. PRESSÃO \n");
-    printf("3. CORRENTE \n");
-    printf("4. UMIDADE \n");
+    printf("0. TEMPERATURA - °C \n");
+    printf("1. VIBRAÇÃO - mm/s \n");
+    printf("2. PRESSÃO - PSI \n");
+    printf("3. CORRENTE - A\n");
+    printf("4. UMIDADE - %% \n");
     int number_typed;
     scanf("%i", &number_typed);
-    getchar();
+    printf("Digite o range mínimo do sensor: \n");
+    scanf("%f", &new_sensor.range_min); 
+    printf("Digite o range máximo do sensor: \n");
+    scanf("%f", &new_sensor.range_max); 
     int is_number_typed_valid = number_typed == 0 || number_typed == 1 || number_typed == 2 || number_typed == 3 || number_typed == 4;
     if(is_number_typed_valid){
         new_sensor.sensor_type = number_typed;
         printf("Novo sensor (Sensor) Criado com sucesso. \n");
     } else {
-        new_sensor.sensor_type = 0;
-        showError("você não digitou um número válido. - Tipo Padrão: Temperatura (0).");
+        new_sensor.id = NOT_FOUND;
+        showError("você não digitou um número válido para o tipo do sensor.");
+        return new_sensor;
     }
     return new_sensor;
 }
@@ -486,14 +538,28 @@ void listAllSensorsFromSector(){
         return;
     }
     for(int i = 0; i < locations[location_selected_idx].sectors[sector_selected_idx].sensors_quantity; i++){
-        printf("ID: %i,  Nome do sensor: %s., tipo de sensor: %s  \n", 
+        printf("ID: %i,  Nome do sensor: %s., tipo de sensor: %s, Faixa do sensor: %.2f - %.2f, Unidade de medida: %s. \n",
             locations[location_selected_idx]
             .sectors[sector_selected_idx]
-            .sensors[i].id, locations[location_selected_idx]
+            .sensors[i].id, 
+            
+            locations[location_selected_idx]
             .sectors[sector_selected_idx].sensors[i].name, 
+
             sensor_type_string[locations[location_selected_idx]
             .sectors[sector_selected_idx]
-            .sensors[i].sensor_type]);
+            .sensors[i].sensor_type],
+
+            locations[location_selected_idx]
+            .sectors[sector_selected_idx].sensors[i].range_min,
+
+            locations[location_selected_idx]
+            .sectors[sector_selected_idx].sensors[i].range_max,
+
+            sensor_type_unit[locations[location_selected_idx]
+            .sectors[sector_selected_idx]
+            .sensors[i].sensor_type]
+            );
     }
 }
 void selectSensor(void){
@@ -534,16 +600,41 @@ int findSensorIdx(int sensor_id){
 };
 
 // - INSPECTIONS FUNCTIONS
-t_inspection createNewInspection(void){
+t_inspection createNewInspection(void){    
     t_inspection new_inspection;
     new_inspection.id = locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].inspections_quantity + 1;
     new_inspection.sensor_id = locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].id;
-    printf("Digite o valor da leitura: \n");
-    scanf("%f", &new_inspection.value);
-    getchar();
+
     time_t date;
     time(&date); 
     new_inspection.date_inspection = date;
+    int quantityOfInspectionsOnThisDay = checkQuantityOfInspectionsOnDate(new_inspection.date_inspection);
+    if(quantityOfInspectionsOnThisDay >= 2){
+        showError("Você não pode gerar mais de duas leituras no mesmo dia");
+        new_inspection.id = NOT_FOUND;
+        return new_inspection;
+    }
+
+    printf("Digite o valor da leitura: \n");
+    scanf("%f", &new_inspection.value);
+
+    if(
+    new_inspection.value < locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].range_min ||
+    new_inspection.value > locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].range_max
+    ){
+        printf("Range mínimo (%.2f) e o Range máximo (%.2f).\n", 
+            locations[location_selected_idx]
+            .sectors[sector_selected_idx]
+            .sensors[sensor_selected_idx].range_min,
+            locations[location_selected_idx]
+            .sectors[sector_selected_idx]
+            .sensors[sensor_selected_idx].range_max);
+ 
+        showError("Você precisa gerar um valor entre o Range mínimo.");
+        new_inspection.id = NOT_FOUND;
+        return new_inspection;
+    }
+   
     printf("%li.\n", date);
     printf("Leitura gerada com sucesso. \n");
     return new_inspection;
@@ -573,9 +664,10 @@ void listAllInspectionsFromSensor(){
             .sensors[sensor_selected_idx]
             .inspections[i].date_inspection);
 
-        printf("ID: %i,  Valor: %f. Data: %s. \n", 
+        printf("ID: %i,  Valor: %.2f %s. Data: %s. \n", 
             locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].inspections[i].id, 
             locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].inspections[i].value,
+            sensor_type_unit[locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].sensor_type],
             date_struct.date
         );
     }
@@ -617,7 +709,16 @@ int findInspectionIdx(int inspection_id){
     }
     return idx;
 };
-
+int checkQuantityOfInspectionsOnDate(time_t timestamp){
+    int counter = 0;
+    t_sensor sensor = locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx];
+    for(int i = 0; i < sensor.inspections_quantity; i++){
+        if(isSameDay(sensor.inspections[i].date_inspection, timestamp)){
+            counter++;
+        }
+    }
+    return counter;
+}
 // - UTILS
 void resetStatesSelected(entities entity){
     switch(entity){
@@ -709,10 +810,20 @@ void showError(const char *error_message){
     printf("Erro! Mensagem do sistema: %s.\n", error_message);
 }
 t_date_string convertTimestampToString(time_t timestamp){
+
     t_date_string struct_date;
     struct tm* tm_info = localtime(&timestamp);
     char date_str[50];
     strftime(date_str, sizeof(date_str), "%d/%m/%Y %H:%M:%S", tm_info);
     strcpy(struct_date.date, date_str);
     return struct_date;
+}
+bool isSameDay(time_t firstTimestamp, time_t secondTimestamp){
+    struct tm *date_a = localtime(&firstTimestamp);
+    struct tm date_a_copy = *date_a; // copia antes do segundo localtime
+    struct tm *date_b = localtime(&secondTimestamp);
+
+    return date_a_copy.tm_mday == date_b->tm_mday &&
+           date_a_copy.tm_mon  == date_b->tm_mon  &&
+           date_a_copy.tm_year == date_b->tm_year;
 }
