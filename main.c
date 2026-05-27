@@ -18,12 +18,12 @@
 
 // - TYPES
 typedef char string [T_STR];
-enum entities {
+typedef enum {
     LOCATION,
     SECTOR,
     SENSOR,
     INSPECTION
-} typedef entities;
+} entities;
 typedef enum {
     TEMPERATURE = 0,
     VIBRATION,
@@ -115,6 +115,7 @@ int findInspectionIdx(int inspection_id);
 int checkQuantityOfInspectionsOnDate(time_t timestamp);
 
 void removeEnterFromString(string str);
+void formatToUpperString(string str);
 void resetStatesSelected(entities entity);
 bool checkExistenceId(int id, entities entity);
 void formatStringToSystemPattern(string str);
@@ -719,6 +720,7 @@ int checkQuantityOfInspectionsOnDate(time_t timestamp){
     }
     return counter;
 }
+
 // - UTILS
 void resetStatesSelected(entities entity){
     switch(entity){
