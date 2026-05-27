@@ -13,6 +13,7 @@
 #define T_MAX_SENSORS 3
 #define T_MAX_INSPECTIONS 5
 #define T_MAX_SENSORS_TYPES 5
+#define T_MAX_INSPECTIONS_ON_SAME_DAY 2
 #define END 0
 #define NOT_FOUND -1
 
@@ -70,6 +71,7 @@ const string sensor_type_string[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATIO
 const string sensor_type_unit[T_MAX_SENSORS_TYPES] = {"°C", "mm/s", "PSI", "A", "%"};
 
 bool running = true;
+bool is_testing = false;
 
 t_location locations[T_MAX_LOCATIONS];
 int locations_quantity = 0;
@@ -122,9 +124,11 @@ void formatStringToSystemPattern(string str);
 void showError(const char *error_message);
 t_date_string convertTimestampToString(time_t timestamp);
 bool isSameDay(time_t firstTimestamp, time_t secondTimestamp);
+void generateDataAndFulfillForTest(void);
 
 int main(){
     srand(time(NULL));
+    if(is_testing) generateDataAndFulfillForTest();
     for(;;){
         if(!running){
             return 0;
@@ -610,7 +614,7 @@ t_inspection createNewInspection(void){
     time(&date); 
     new_inspection.date_inspection = date;
     int quantityOfInspectionsOnThisDay = checkQuantityOfInspectionsOnDate(new_inspection.date_inspection);
-    if(quantityOfInspectionsOnThisDay >= 2){
+    if(quantityOfInspectionsOnThisDay >= T_MAX_INSPECTIONS_ON_SAME_DAY){
         showError("Você não pode gerar mais de duas leituras no mesmo dia");
         new_inspection.id = NOT_FOUND;
         return new_inspection;
@@ -828,4 +832,87 @@ bool isSameDay(time_t firstTimestamp, time_t secondTimestamp){
     return date_a_copy.tm_mday == date_b->tm_mday &&
            date_a_copy.tm_mon  == date_b->tm_mon  &&
            date_a_copy.tm_year == date_b->tm_year;
+}
+void generateDataAndFulfillForTest(void){
+    locations[0].id = 1;
+    strcpy(locations[0].name, "PLANTA SAO PAULO");
+    locations[0].sectors_quantity = 2;
+    locations[0].sectors[0].id = 1;
+    locations[0].sectors[0].location_id = 1;
+    strcpy(locations[0].sectors[0].name, "PRODUCAO");
+    strcpy(locations[0].sectors[0].description, "AREA PRINCIPAL DE PRODUCAO");
+    locations[0].sectors[0].sensors_quantity = 2;
+    locations[0].sectors[0].sensors[0].id = 1;
+    locations[0].sectors[0].sensors[0].sector_id = 1;
+    strcpy(locations[0].sectors[0].sensors[0].name, "SENSOR TEMPERATURA FORNO");
+    locations[0].sectors[0].sensors[0].sensor_type = TEMPERATURE;
+    locations[0].sectors[0].sensors[0].range_min = 100.0f;
+    locations[0].sectors[0].sensors[0].range_max = 500.0f;
+    locations[0].sectors[0].sensors[0].inspections_quantity = 2;
+    locations[0].sectors[0].sensors[0].inspections[0].id = 1;
+    locations[0].sectors[0].sensors[0].inspections[0].sensor_id = 1;
+    locations[0].sectors[0].sensors[0].inspections[0].value = 320.5f;
+    locations[0].sectors[0].sensors[0].inspections[0].date_inspection = time(NULL) - 86400; // ontem
+    locations[0].sectors[0].sensors[0].inspections[1].id = 2;
+    locations[0].sectors[0].sensors[0].inspections[1].sensor_id = 1;
+    locations[0].sectors[0].sensors[0].inspections[1].value = 415.0f;
+    locations[0].sectors[0].sensors[0].inspections[1].date_inspection = time(NULL) - 3600; // 1h atrás
+    locations[0].sectors[0].sensors[1].id = 2;
+    locations[0].sectors[0].sensors[1].sector_id = 1;
+    strcpy(locations[0].sectors[0].sensors[1].name, "SENSOR VIBRACAO ESTEIRA");
+    locations[0].sectors[0].sensors[1].sensor_type = VIBRATION;
+    locations[0].sectors[0].sensors[1].range_min = 0.0f;
+    locations[0].sectors[0].sensors[1].range_max = 50.0f;
+    locations[0].sectors[0].sensors[1].inspections_quantity = 1;
+    locations[0].sectors[0].sensors[1].inspections[0].id = 1;
+    locations[0].sectors[0].sensors[1].inspections[0].sensor_id = 2;
+    locations[0].sectors[0].sensors[1].inspections[0].value = 12.3f;
+    locations[0].sectors[0].sensors[1].inspections[0].date_inspection = time(NULL) - 7200;
+    locations[0].sectors[1].id = 2;
+    locations[0].sectors[1].location_id = 1;
+    strcpy(locations[0].sectors[1].name, "UTILIDADES");
+    strcpy(locations[0].sectors[1].description, "AREA DE VAPOR E AR COMPRIMIDO");
+    locations[0].sectors[1].sensors_quantity = 1;
+    locations[0].sectors[1].sensors[0].id = 1;
+    locations[0].sectors[1].sensors[0].sector_id = 2;
+    strcpy(locations[0].sectors[1].sensors[0].name, "SENSOR PRESSAO CALDEIRA");
+    locations[0].sectors[1].sensors[0].sensor_type = PRESSURE;
+    locations[0].sectors[1].sensors[0].range_min = 5.0f;
+    locations[0].sectors[1].sensors[0].range_max = 150.0f;
+    locations[0].sectors[1].sensors[0].inspections_quantity = 0;
+    locations[1].id = 2;
+    strcpy(locations[1].name, "PLANTA CAMPINAS");
+    locations[1].sectors_quantity = 1;
+    locations[1].sectors[0].id = 1;
+    locations[1].sectors[0].location_id = 2;
+    strcpy(locations[1].sectors[0].name, "ELETRICA");
+    strcpy(locations[1].sectors[0].description, "PAINEL DE DISTRIBUICAO ELETRICA");
+    locations[1].sectors[0].sensors_quantity = 2;
+    locations[1].sectors[0].sensors[0].id = 1;
+    locations[1].sectors[0].sensors[0].sector_id = 1;
+    strcpy(locations[1].sectors[0].sensors[0].name, "SENSOR CORRENTE PAINEL A");
+    locations[1].sectors[0].sensors[0].sensor_type = CURRENT;
+    locations[1].sectors[0].sensors[0].range_min = 0.0f;
+    locations[1].sectors[0].sensors[0].range_max = 200.0f;
+    locations[1].sectors[0].sensors[0].inspections_quantity = 2;
+    locations[1].sectors[0].sensors[0].inspections[0].id = 1;
+    locations[1].sectors[0].sensors[0].inspections[0].sensor_id = 1;
+    locations[1].sectors[0].sensors[0].inspections[0].value = 87.4f;
+    locations[1].sectors[0].sensors[0].inspections[0].date_inspection = time(NULL) - 172800; // 2 dias atrás
+    locations[1].sectors[0].sensors[0].inspections[1].id = 2;
+    locations[1].sectors[0].sensors[0].inspections[1].sensor_id = 1;
+    locations[1].sectors[0].sensors[0].inspections[1].value = 102.0f;
+    locations[1].sectors[0].sensors[0].inspections[1].date_inspection = time(NULL) - 600;
+    locations[1].sectors[0].sensors[1].id = 2;
+    locations[1].sectors[0].sensors[1].sector_id = 1;
+    strcpy(locations[1].sectors[0].sensors[1].name, "SENSOR UMIDADE SALA TI");
+    locations[1].sectors[0].sensors[1].sensor_type = HUMIDITY;
+    locations[1].sectors[0].sensors[1].range_min = 30.0f;
+    locations[1].sectors[0].sensors[1].range_max = 80.0f;
+    locations[1].sectors[0].sensors[1].inspections_quantity = 1;
+    locations[1].sectors[0].sensors[1].inspections[0].id = 1;
+    locations[1].sectors[0].sensors[1].inspections[0].sensor_id = 2;
+    locations[1].sectors[0].sensors[1].inspections[0].value = 55.0f;
+    locations[1].sectors[0].sensors[1].inspections[0].date_inspection = time(NULL) - 1800;
+    locations_quantity = 2;
 }
