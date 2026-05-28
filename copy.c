@@ -71,7 +71,7 @@ const string sensor_type_string[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATIO
 const string sensor_type_unit[T_MAX_SENSORS_TYPES] = {"°C", "mm/s", "PSI", "A", "%"};
 
 bool running = true;
-bool is_testing = false;
+bool is_testing = true;
 
 t_location locations[T_MAX_LOCATIONS];
 int locations_quantity = 0;

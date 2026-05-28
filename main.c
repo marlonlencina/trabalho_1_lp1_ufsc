@@ -71,7 +71,7 @@ const string sensor_type_string[T_MAX_SENSORS_TYPES] = {"TEMPERATURE", "VIBRATIO
 const string sensor_type_unit[T_MAX_SENSORS_TYPES] = {"°C", "mm/s", "PSI", "A", "%"};
 
 bool running = true;
-bool is_testing = false;
+bool is_testing = true;
 
 t_location locations[T_MAX_LOCATIONS];
 int locations_quantity = 0;
@@ -115,6 +115,7 @@ void listAllInspectionsFromSensor(void);
 void selectInspection(void);
 int findInspectionIdx(int inspection_id);
 int checkQuantityOfInspectionsOnDate(time_t timestamp);
+void generateReportsOffInspections(void);
 
 void removeEnterFromString(string str);
 void formatToUpperString(string str);
@@ -156,6 +157,7 @@ void menu_locations(){
         printf("1. Criar planta (0-9): \n");
         printf("2. Listar todas plantas (0-9): \n");
         printf("3. Selecionar planta (0-9): \n");
+        printf("5. Gerar relatório de leituras\n");
         printf("0. Fechar (Sair do programa):. \n");
         scanf("%i", &opt);
         getchar();
@@ -188,6 +190,9 @@ void action_menu_locations(int option){
             break;
             case 3:
                 selectLocation(); 
+            break;
+            case 5:
+                generateReportsOffInspections();
             break;
             default: break;
         }
@@ -232,6 +237,9 @@ void action_menu_sectors(int option){
             case 3:
                 selectSector();
                 break;
+            case 5:
+                generateReportsOffInspections();
+            break;
             case 0: 
                 resetStatesSelected(LOCATION);
                 break;
@@ -723,6 +731,32 @@ int checkQuantityOfInspectionsOnDate(time_t timestamp){
         }
     }
     return counter;
+}
+void generateReportsOffInspections(void){
+
+    int opt;
+
+    printf("Escolha uma opção");
+    printf("0. Por Todos os locais");
+    printf("1. Por local");
+    scanf("%i", &opt);
+
+    for(int i = 0; i < locations_quantity; i++){
+        for(int j = 0; j < locations[i].sectors_quantity; j++){
+            for(int k = 0; locations[i].sectors[j].sensors_quantity; k++){
+                for(int l = 0; j < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
+                    printf("Local: %s \n setor: %s \n sensor: %s \n valor: %f%s \n", 
+                        locations[i].name,
+                        locations[i].sectors[j].name,
+                        locations[i].sectors[j].sensors[k].name,
+                        locations[i].sectors[j].sensors[k].inspections[l].value,
+                        sensor_type_unit[locations[i].sectors[j].sensors[k].sensor_type] 
+                    );
+                }
+            }
+        }
+        printf("\n");
+    }
 }
 
 // - UTILS
