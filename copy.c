@@ -108,7 +108,7 @@ t_sensor findSensor(int sensor_id);
 void listAllSensorsFromSector(void);
 void selectSensor(void);
 int findSensorIdx(int sensor_id);
-void generate_reports_sensors_reports(void);
+void generateReportsSensorsReposrts(void);
 
 t_inspection createNewInspection(void);
 t_inspection findInspection(int inspection_id);
@@ -192,7 +192,7 @@ void action_menu_locations(int option){
                 selectLocation(); 
             break;
             case 4:
-                generate_reports_sensors_reports();
+                generateReportsSensorsReports();
             break;
             default: break;
         }
@@ -419,7 +419,7 @@ int findLocationIdx(int location_id){
     if(idx == NOT_FOUND) printf("Nenhuma location encontrada. \n");
     return idx;
 };
-void generate_reports_sensors_reports(void){
+void generateReportsSensorsReports(void){
     
     int option;
     int sensor_type_option;
@@ -439,6 +439,7 @@ void generate_reports_sensors_reports(void){
                         locations[i].sectors[j].sensors[k].range_min, locations[i].sectors[j].sensors[k].range_max,
                         locations[i].sectors[j].sensors[k].inspections_quantity
                         );
+                        
 
                     }
                     printf("\n");
