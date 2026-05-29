@@ -3,6 +3,8 @@ Para o desenvolvimento desse trabalho foi usado a Linguagem de Programação C.
 
 # 1. Organização/Estruturação (Marlon)
 
+- Preencha a Checklist com [X] após feito.
+
 - [X] Plantas (Locations)
   Id, Nome, Setores
 - [X] Setores (Sectors)
@@ -16,8 +18,10 @@ A relação aqui é Planta contém Setores, Setores contém Sensores, cada plant
 
 ## 2. Funcionalidades (João)
 
+- [X] Relatório de sensores (geral e por tipo);
 - [] Relatório de setores
-- [] Relatório de leituras (por local e por todos os locais)
+- [X] Relatório de leituras (por local e por todos os locais)
+
 - [] Relatório de variação de leitura (por setor e por sensor)
 - [] Relatório de médias de leitura por sensor considerando todos os setores
 - [] Pesquisar sensor por tipo
