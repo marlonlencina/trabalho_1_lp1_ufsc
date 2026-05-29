@@ -108,6 +108,8 @@ t_sensor findSensor(int sensor_id);
 void listAllSensorsFromSector(void);
 void selectSensor(void);
 int findSensorIdx(int sensor_id);
+void generateReportOfSensors(void);
+
 
 t_inspection createNewInspection(void);
 t_inspection findInspection(int inspection_id);
@@ -115,7 +117,7 @@ void listAllInspectionsFromSensor(void);
 void selectInspection(void);
 int findInspectionIdx(int inspection_id);
 int checkQuantityOfInspectionsOnDate(time_t timestamp);
-void generateReportsOffInspections(void);
+void generateReportOfInspections(void);
 
 void removeEnterFromString(string str);
 void formatToUpperString(string str);
@@ -157,6 +159,7 @@ void menu_locations(){
         printf("1. Criar planta (0-9): \n");
         printf("2. Listar todas plantas (0-9): \n");
         printf("3. Selecionar planta (0-9): \n");
+        printf("4. Gerar relatorio de senores\n");
         printf("5. Gerar relatório de leituras\n");
         printf("0. Fechar (Sair do programa):. \n");
         scanf("%i", &opt);
@@ -191,8 +194,12 @@ void action_menu_locations(int option){
             case 3:
                 selectLocation(); 
             break;
+            case 4:
+                generateReportOfSensors();
+            break;
+
             case 5:
-                generateReportsOffInspections();
+                generateReportOfInspections();
             break;
             default: break;
         }
@@ -238,7 +245,7 @@ void action_menu_sectors(int option){
                 selectSector();
                 break;
             case 5:
-                generateReportsOffInspections();
+                generateReportOfInspections();
             break;
             case 0: 
                 resetStatesSelected(LOCATION);
@@ -387,6 +394,7 @@ void listAllLocations(void){
         printf("Não existem plantas disponíveis. \n");
         return;
     }
+    printf("Total de locations: %i. \n", locations_quantity);
     for(int i = 0; i < locations_quantity; i++){
         printf("ID: %i, Nome: %s. \n", locations[i].id, locations[i].name);
     }
@@ -455,6 +463,9 @@ void listAllSectorsFromLocation(){
         printf("Não existem setores disponíveis. \n");
         return;
     }
+    
+    if(locations[location_selected_idx].id != NOT_FOUND) printf("Total de sectors: %i. \n", locations[location_selected_idx].sectors_quantity);
+
     for(int i = 0; i < locations[location_selected_idx].sectors_quantity; i++){
         printf("ID: %i,  Nome do setor: %s. \n", locations[location_selected_idx].sectors[i].id, locations[location_selected_idx].sectors[i].name);
     }
@@ -550,6 +561,10 @@ void listAllSensorsFromSector(){
         printf("Não existem sensores disponíveis. \n");
         return;
     }
+
+    if(locations[location_selected_idx].id && 
+        locations[location_selected_idx].sectors[sector_selected_idx].id) printf("Total de sensors: %i. \n", locations[location_selected_idx].sectors[sector_selected_idx].sensors_quantity);
+
     for(int i = 0; i < locations[location_selected_idx].sectors[sector_selected_idx].sensors_quantity; i++){
         printf("ID: %i,  Nome do sensor: %s., tipo de sensor: %s, Faixa do sensor: %.2f - %.2f, Unidade de medida: %s. \n",
             locations[location_selected_idx]
@@ -611,6 +626,65 @@ int findSensorIdx(int sensor_id){
     if(idx == NOT_FOUND) printf("Nenhum sensor encontrado. \n");
     return idx;
 };
+void generateReportOfSensors(void){
+    
+    int option;
+    int sensor_type_option;
+    printf("Escolha um tipo de relatório: \n");
+    printf("0. Geral\n");
+    printf("1. Por tipo\n");
+    printf("Digite a opção: \n");
+    scanf("%i", &option);
+
+    int is_option_valid = option == 0 || option == 1;
+    if(!is_option_valid){
+        showError("Opção digitada inválida");
+        return;
+    }
+
+    if(option == 0){
+    for(int i = 0; i < locations_quantity; i++){
+                for(int j = 0; j < locations[i].sectors_quantity; j++){
+                    for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
+                        printf("Id: %i\n Nome: %s \n Tipo: %s \n Min/Max: [%.3f/%.3f] \n Total de leituras: %i\n", 
+                        locations[i].sectors[j].sensors[k].id,
+                        locations[i].sectors[j].sensors[k].name,
+                        sensor_type_string[locations[i].sectors[j].sensors[k].sensor_type], 
+                        locations[i].sectors[j].sensors[k].range_min, locations[i].sectors[j].sensors[k].range_max,
+                        locations[i].sectors[j].sensors[k].inspections_quantity
+                        );
+                    }
+                }
+            }
+        }else{
+            printf("Qual o tipo do sensor:\n");
+            printf("0. Temperatura\n");
+            printf("1. Vibração\n");
+            printf("2. Pressão\n");
+            printf("3. Corrente\n");
+            printf("4. Umidade\n");
+            printf("Digite a opção: \n");
+
+            scanf("%i", &sensor_type_option);
+
+            for(int i = 0; i < locations_quantity; i++){
+                for(int j = 0; j < locations[i].sectors_quantity; j++){
+                    for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
+                        if( sensor_type_option == locations[i].sectors[j].sensors[k].sensor_type){
+                            printf("Id: %i \n Nome: %s \n Tipo: %s \n Min/Max:[%.3f/%.3f] \n Total de leituras: %i\n", 
+                                locations[i].sectors[j].sensors[k].id,
+                                locations[i].sectors[j].sensors[k].name,
+                                sensor_type_string[locations[i].sectors[j].sensors[k].sensor_type], 
+                                locations[i].sectors[j].sensors[k].range_min, locations[i].sectors[j].sensors[k].range_max,
+                                locations[i].sectors[j].sensors[k].inspections_quantity
+                                );
+                        }
+
+                    }
+                }
+            }
+        }
+}
 
 // - INSPECTIONS FUNCTIONS
 t_inspection createNewInspection(void){    
@@ -669,6 +743,11 @@ void listAllInspectionsFromSensor(){
         printf("Não existem leituras disponíveis. \n");
         return;
     }
+
+    if( locations[location_selected_idx].id 
+        && locations[location_selected_idx].sectors[sector_selected_idx].id
+        && locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].id) printf("Total de inspections: %i. \n", locations[location_selected_idx].sectors[sector_selected_idx].sensors[sector_selected_idx].inspections_quantity);
+
     for(int i = 0; i < locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].inspections_quantity; i++){
             
         t_date_string date_struct = convertTimestampToString(
@@ -732,30 +811,66 @@ int checkQuantityOfInspectionsOnDate(time_t timestamp){
     }
     return counter;
 }
-void generateReportsOffInspections(void){
+void generateReportOfInspections(void){
 
-    int opt;
+    int option;
+    printf("Escolha uma opção: \n");
+    printf("0. Por Todos os locais. \n");
+    printf("1. Por local. \n");
+    printf("Digite a opção: \n");
+    scanf("%i", &option);
 
-    printf("Escolha uma opção");
-    printf("0. Por Todos os locais");
-    printf("1. Por local");
-    scanf("%i", &opt);
+    int is_option_valid = option == 0 || option == 1;
+    if(!is_option_valid){
+        showError("Opção digitada inválida");
+        return;
+    }
 
-    for(int i = 0; i < locations_quantity; i++){
-        for(int j = 0; j < locations[i].sectors_quantity; j++){
-            for(int k = 0; locations[i].sectors[j].sensors_quantity; k++){
-                for(int l = 0; j < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
-                    printf("Local: %s \n setor: %s \n sensor: %s \n valor: %f%s \n", 
-                        locations[i].name,
-                        locations[i].sectors[j].name,
-                        locations[i].sectors[j].sensors[k].name,
-                        locations[i].sectors[j].sensors[k].inspections[l].value,
-                        sensor_type_unit[locations[i].sectors[j].sensors[k].sensor_type] 
-                    );
+    if(option == 0){
+        for(int i = 0; i < locations_quantity; i++){
+            for(int j = 0; j < locations[i].sectors_quantity; j++){
+                for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
+                    for(int l = 0; l < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
+                                t_date_string date_struct = convertTimestampToString(locations[i].sectors[j].sensors[k].inspections[l].date_inspection);
+                            printf("Planta: %s Setor: %s Sensor: %s Valor da leitura: %.2f %s Data: %s. \n",
+                                locations[i].name,
+                                locations[i].sectors[j].name,
+                                locations[i].sectors[j].sensors[k].name,
+                                locations[i].sectors[j].sensors[k].inspections[l].value,
+                                sensor_type_unit[locations[i].sectors[j].sensors[k].sensor_type],
+                                date_struct.date
+                            );
+                        }
+                    }
                 }
-            }
         }
-        printf("\n");
+    } else {
+        int option_location;
+        printf("Escolha um local. \n");
+        for(int i = 0; i < locations_quantity; i++){
+            printf("%i. Nome: %s. \n", i, locations[i].name);
+        }
+        printf("Digite a opção: \n");
+        scanf("%i", &option_location);
+
+        for(int i = 0; i < locations_quantity; i++){
+                if(i != option_location) continue;
+                    for(int j = 0; j < locations[i].sectors_quantity; j++){
+                        for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
+                            for(int l = 0; l < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
+                                t_date_string date_struct = convertTimestampToString(locations[i].sectors[j].sensors[k].inspections[l].date_inspection);
+                                printf("Planta: %s Setor: %s Sensor: %s Valor da leitura: %.2f %s Data: %s. \n",
+                                locations[i].name,
+                                locations[i].sectors[j].name,
+                                locations[i].sectors[j].sensors[k].name,
+                                locations[i].sectors[j].sensors[k].inspections[l].value,
+                                sensor_type_unit[locations[i].sectors[j].sensors[k].sensor_type],
+                                date_struct.date
+                            );
+                        }
+                    }
+                }
+        }
     }
 }
 
@@ -915,6 +1030,8 @@ void generateDataAndFulfillForTest(void){
     locations[0].sectors[1].sensors[0].range_max = 150.0f;
     locations[0].sectors[1].sensors[0].inspections_quantity = 0;
     locations[1].id = 2;
+
+
     strcpy(locations[1].name, "PLANTA CAMPINAS");
     locations[1].sectors_quantity = 1;
     locations[1].sectors[0].id = 1;
