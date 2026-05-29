@@ -102,6 +102,8 @@ t_sector findSector(int sector_id);
 void listAllSectorsFromLocation(void);
 void selectSector(void);
 int findSectorIdx(int sector_id);
+void generateReportsOfSectors(void);
+void searchForSectorDescription(void);
 
 t_sensor createNewSensor(void);
 t_sensor findSensor(int sensor_id);
@@ -109,6 +111,8 @@ void listAllSensorsFromSector(void);
 void selectSensor(void);
 int findSensorIdx(int sensor_id);
 void generateReportOfSensors(void);
+void searchForTypeSensor(void);
+void generateAverageInspectionValuePerSensor(void);
 
 
 t_inspection createNewInspection(void);
@@ -118,6 +122,7 @@ void selectInspection(void);
 int findInspectionIdx(int inspection_id);
 int checkQuantityOfInspectionsOnDate(time_t timestamp);
 void generateReportOfInspections(void);
+void generateReportOfInspectionsValueVariation(void);
 
 void removeEnterFromString(string str);
 void formatToUpperString(string str);
@@ -161,6 +166,11 @@ void menu_locations(){
         printf("3. Selecionar planta (0-9): \n");
         printf("4. Gerar relatorio de senores\n");
         printf("5. Gerar relatório de leituras\n");
+        printf("6. Gerar relatório de setores\n");
+        printf("7. Procurar sensor por tipo\n");
+        printf("8. Pesquisar setor por descrição\n");
+        printf("9. Gerar relatório de média por sensor\n");
+        printf("10. Gerar relatório de variação de leitura \n");
         printf("0. Fechar (Sair do programa):. \n");
         scanf("%i", &opt);
         getchar();
@@ -197,10 +207,23 @@ void action_menu_locations(int option){
             case 4:
                 generateReportOfSensors();
             break;
-
             case 5:
                 generateReportOfInspections();
             break;
+            case 6:
+                generateReportsOfSectors();
+            break;
+            case 7:
+                searchForTypeSensor();
+            break;
+            case 8:
+                searchForSectorDescription();
+            break;
+            case 9:
+                generateAverageInspectionValuePerSensor();
+            break;
+            case 10: 
+                generateReportOfInspectionsValueVariation();
             default: break;
         }
 }
@@ -503,6 +526,39 @@ int findSectorIdx(int sector_id){
     if(idx == NOT_FOUND) printf("Nenhum sector encontrada. \n");
     return idx;
 };
+void generateReportsOfSectors(void){
+    for(int i = 0; i < locations_quantity; i++){
+                for(int j = 0; j < locations[i].sectors_quantity; j++){
+                    printf("Id: %i\n Nome: %s \n Descrição: %s \n Quantidade de sensores: %i \n", 
+                    locations[i].sectors[j].id,
+                    locations[i].sectors[j].name,
+                    locations[i].sectors[j].description , 
+                    locations[i].sectors[j].sensors_quantity 
+                    );
+                }
+            }
+
+}
+void searchForSectorDescription(void){
+    string description;
+    printf("Digite uma descrição de um setor:\n");
+    fgets(description, T_STR, stdin);
+
+    formatStringToSystemPattern(description);
+
+    for(int i = 0; i < locations_quantity; i++){
+        for(int j = 0; j < locations[i].sectors_quantity; j++){
+            if(strcmp(description, locations[i].sectors[j].description) == 0){
+                printf("Id: %i\n Nome: %s \n Descrição: %s \n Quantidade de sensores: %i \n", 
+                    locations[i].sectors[j].id,
+                    locations[i].sectors[j].name,
+                    locations[i].sectors[j].description , 
+                    locations[i].sectors[j].sensors_quantity 
+                    );
+            }
+        }
+    }
+}
 
 // - SENSORS FUNCTIONS
 t_sensor createNewSensor(void){
@@ -684,6 +740,97 @@ void generateReportOfSensors(void){
                 }
             }
         }
+}
+void searchForTypeSensor(void){
+ 
+    int sensor_type_option;
+
+    printf("Qual o tipo do sensor:\n");
+    printf("0. Temperatura\n");
+    printf("1. Vibração\n");
+    printf("2. Pressão\n");
+    printf("3. Corrente\n");
+    printf("4. Umidade\n");
+    printf("Digite a opção: \n");
+
+    scanf("%i", &sensor_type_option);
+
+    for(int i = 0; i < locations_quantity; i++){
+        for(int j = 0; j < locations[i].sectors_quantity; j++){
+            for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
+                if( sensor_type_option == locations[i].sectors[j].sensors[k].sensor_type){
+                    printf("Id: %i \n Nome: %s \n Tipo: %s \n Min/Max:[%.3f/%.3f] \n Total de leituras: %i\n", 
+                        locations[i].sectors[j].sensors[k].id,
+                        locations[i].sectors[j].sensors[k].name,
+                        sensor_type_string[locations[i].sectors[j].sensors[k].sensor_type], 
+                        locations[i].sectors[j].sensors[k].range_min, locations[i].sectors[j].sensors[k].range_max,
+                        locations[i].sectors[j].sensors[k].inspections_quantity
+                        );
+                }
+
+            }
+        }
+    }
+}  
+void generateAverageInspectionValuePerSensor(void){
+
+
+    for(int i = 0; i < locations_quantity; i++){
+        for(int j = 0; j < locations[i].sectors_quantity; j++){
+              float average_value_temperature = 0.0, average_value_vibration = 0.0,
+                average_value_pressure = 0.0, average_value_current = 0.0, average_value_humidity = 0.0;
+                int total_inspections_temperature = 0, total_inspections_vibration = 0,
+                total_inspections_pressure = 0, total_inspections_current = 0, total_inspections_humidity = 0; 
+                float total_sum_inspections_temperature = 0.0;
+                float total_sum_inspections_vibration = 0.0;
+                float total_sum_inspections_pressure = 0.0;
+                float total_sum_inspections_current = 0.0;
+                float total_sum_inspections_humidity = 0.0;
+
+                
+            for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
+                if(locations[i].sectors[j].sensors[k].sensor_type == 0){
+                    for(int l = 0; l < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
+                    total_inspections_temperature += 1.0;
+                    total_sum_inspections_temperature += locations[i].sectors[j].sensors[k].inspections[l].value;
+                    }
+                } 
+                if(locations[i].sectors[j].sensors[k].sensor_type == 1){
+                    for(int l = 0; l < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
+                    total_inspections_vibration += 1.0;
+                    total_sum_inspections_vibration += locations[i].sectors[j].sensors[k].inspections[l].value;
+                    }
+                }               
+                if(locations[i].sectors[j].sensors[k].sensor_type == 2){
+                    for(int l = 0; l < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
+                    total_inspections_pressure += 1.0;
+                    total_sum_inspections_pressure += locations[i].sectors[j].sensors[k].inspections[l].value;
+                    }
+                }
+                if(locations[i].sectors[j].sensors[k].sensor_type == 3){
+                    for(int l = 0; l < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
+                    total_inspections_current += 1.0;
+                    total_sum_inspections_current += locations[i].sectors[j].sensors[k].inspections[l].value;
+                    }
+                }
+                if(locations[i].sectors[j].sensors[k].sensor_type == 4){
+                    for(int l = 0; l < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
+                    total_inspections_humidity += 1.0;
+                    total_sum_inspections_humidity += locations[i].sectors[j].sensors[k].inspections[l].value;
+                    }
+                }
+            }
+            average_value_temperature = total_sum_inspections_temperature / (float)total_inspections_temperature;
+            average_value_vibration = total_sum_inspections_vibration / (float)total_inspections_vibration;
+            average_value_pressure = total_sum_inspections_pressure / (float)total_inspections_pressure;
+            average_value_current = total_sum_inspections_current / (float)total_inspections_current;
+            average_value_humidity = total_sum_inspections_humidity / (float)total_inspections_humidity;
+
+
+            printf("%f\n %f\n %f\n %f\n %f",average_value_temperature, average_value_vibration,
+            average_value_pressure, average_value_current,average_value_humidity);
+        }
+    }
 }
 
 // - INSPECTIONS FUNCTIONS
@@ -873,7 +1020,26 @@ void generateReportOfInspections(void){
         }
     }
 }
+void generateReportOfInspectionsValueVariation(void){
+    int option;
+    printf("0. Variação leitura dos sensores por setor. \n");
+    printf("1. Variação leitura dos sensores por sensor. \n");
+    printf("Digite uma opção: \n");
+    scanf("%i", &option);
 
+    int is_option_valid = option == 0 || option == 1;
+    if(!is_option_valid){
+        showError("Opção digitada inválida");
+        return;
+    }
+
+    if(option == 0){
+        //variacao por setor
+        
+    } else {
+        //variacao por sensor
+    };
+};
 // - UTILS
 void resetStatesSelected(entities entity){
     switch(entity){
