@@ -1,3 +1,5 @@
+// REPOSITÓRIO DO GITHUB: https://github.com/marlonlencina/trabalho_1_lp1_ufsc
+// IS_TESTING iniciado em TRUE para preenchimento automático de data no vetor de plantas.
 // - INCLUDES
 #include <stdio.h>
 #include <stdlib.h>
@@ -272,9 +274,6 @@ void action_menu_sectors(int option){
             case 3:
                 selectSector();
                 break;
-            case 5:
-                generateReportOfInspections();
-            break;
             case 0: 
                 resetStatesSelected(LOCATION);
                 break;
@@ -437,11 +436,11 @@ void selectLocation(void){
     listAllLocations();
     printf("Digite o id da planta (Location): \n");
  
-    resetStatesSelected(LOCATION);
     int location_id;
     scanf("%i", &location_id);
     int locationIsValid = checkExistenceId(location_id, LOCATION);
     if(locationIsValid){
+        resetStatesSelected(LOCATION);
         location_selected_idx = findLocationIdx(location_id);
     } else {
         showError("O Id que você inseriu não corresponde a nenhuma planta existente");
@@ -969,43 +968,99 @@ void generateReportOfInspections(void){
     }
 }
 void generateReportOfInspectionsVariation(void){
-    for(int i = 0; i < locations_quantity; i++){
-        for(int j = 0; j < locations[i].sectors_quantity; j++){
-            for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
-                t_sensor sensor = locations[i].sectors[j].sensors[k];
-                for(int m = 0; m < sensor.inspections_quantity; m++){
-                    for(int n = m + 1; n < sensor.inspections_quantity; n++){
-                        if (isSameDay(
-                                sensor.inspections[m].date_inspection,
-                                sensor.inspections[n].date_inspection))
-                        {
-                            t_inspection first_inspection_of_the_day;
-                            t_inspection second_inspection_of_the_day;
-                            t_date_string struct_date = convertTimestampToString(sensor.inspections[m].date_inspection, false);
+    int option;
+    printf("Escolha um tipo de relatório: \n");
+    printf("0. Por Setor\n");
+    printf("1. Por Sensor\n");
+    printf("Digite a opção: \n");
+    scanf("%i", &option);
 
-                            if(sensor.inspections[m].date_inspection <= sensor.inspections[n].date_inspection){
-                                first_inspection_of_the_day  = sensor.inspections[m];
-                                second_inspection_of_the_day = sensor.inspections[n];
-                            } else {
-                                first_inspection_of_the_day  = sensor.inspections[n];
-                                second_inspection_of_the_day = sensor.inspections[m];
+    int is_option_valid = option == 0 || option == 1;
+    if(!is_option_valid){
+        showError("Opção digitada inválida");
+        return;
+    }
+    printf("# Planta: %s \n", locations[location_selected_idx].name);
+ 
+    if(option == 0){
+        selectLocation();
+        selectSector();
+        for(int k = 0; k < locations[location_selected_idx].sectors[sector_selected_idx].sensors_quantity; k++){
+                        t_sensor sensor = locations[location_selected_idx].sectors[sector_selected_idx].sensors[k];
+                        for(int m = 0; m < sensor.inspections_quantity; m++){
+                            for(int n = m + 1; n < sensor.inspections_quantity; n++){
+                                if (isSameDay(
+                                        sensor.inspections[m].date_inspection,
+                                        sensor.inspections[n].date_inspection))
+                                {
+                                    t_inspection first_inspection_of_the_day;
+                                    t_inspection second_inspection_of_the_day;
+                                    t_date_string struct_date = convertTimestampToString(sensor.inspections[m].date_inspection, false);
+
+                                    if(sensor.inspections[m].date_inspection <= sensor.inspections[n].date_inspection){
+                                        first_inspection_of_the_day  = sensor.inspections[m];
+                                        second_inspection_of_the_day = sensor.inspections[n];
+                                    } else {
+                                        first_inspection_of_the_day  = sensor.inspections[n];
+                                        second_inspection_of_the_day = sensor.inspections[m];
+                                    }
+
+                                    float variation_between_values = second_inspection_of_the_day.value - first_inspection_of_the_day.value;
+                                    printf("  Setor: %s \n", 
+                                        locations[location_selected_idx].sectors[sector_selected_idx].name
+                                    );
+                                     printf("    Sensor: %s \n", 
+                                        sensor.name
+                                    );
+                                    printf("      Data: %s -> Variação do sensor: %.2f %s.\n", 
+                                        struct_date.date,
+                                        variation_between_values,
+                                        sensor_type_unit[sensor.sensor_type]
+                                );
                             }
-
-                            float variation_between_values = second_inspection_of_the_day.value - first_inspection_of_the_day.value;
-                            printf("Planta: %s - Setor: %s \n", 
-                                locations[i].name,
-                                locations[i].sectors[j].name
-                            );
-                            printf("Valor da variação do sensor: %s - Data: %s -> %.2f. \n", 
-                                sensor.name,
-                                struct_date.date,
-                                variation_between_values
-                            );
                         }
                     }
                 }
+        resetStatesSelected(LOCATION);
+    } else {
+        selectLocation();
+        selectSector();
+        selectSensor();
+        t_sensor sensor = locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx];
+        for(int m = 0; m < sensor.inspections_quantity; m++){
+                for(int n = m + 1; n < sensor.inspections_quantity; n++){
+                    if (isSameDay(
+                        sensor.inspections[m].date_inspection,
+                        sensor.inspections[n].date_inspection))
+                    {
+                    t_inspection first_inspection_of_the_day;
+                    t_inspection second_inspection_of_the_day;
+                    t_date_string struct_date = convertTimestampToString(sensor.inspections[m].date_inspection, false);
+
+                    if(sensor.inspections[m].date_inspection <= sensor.inspections[n].date_inspection){
+                        first_inspection_of_the_day  = sensor.inspections[m];
+                        second_inspection_of_the_day = sensor.inspections[n];
+                    } else {
+                        first_inspection_of_the_day  = sensor.inspections[n];
+                        second_inspection_of_the_day = sensor.inspections[m];
+                    }
+
+                    float variation_between_values = second_inspection_of_the_day.value - first_inspection_of_the_day.value;
+                    printf("  Setor: %s \n", 
+                        locations[location_selected_idx].sectors[sector_selected_idx].name
+                    );
+                    printf("    Sensor: %s \n", 
+                        sensor.name
+                    );
+                    printf("      Data: %s -> Variação do sensor: %.2f %s.\n", 
+                        struct_date.date,
+                        variation_between_values,
+                        sensor_type_unit[sensor.sensor_type]
+                );
             }
         }
+    }
+        resetStatesSelected(LOCATION);
     }
 };
 void generateReportOfInspectionsAverage(void){
@@ -1017,12 +1072,16 @@ void generateReportOfInspectionsAverage(void){
                     add_values = add_values +locations[i].sectors[j].sensors[k].inspections[l].value;
                 }
                 if( locations[i].sectors[j].sensors[k].inspections_quantity > 0){
-                printf("Média de inspeção do sensor: %s do setor:%s id:%i média: %.4f \n", 
-                locations[i].sectors[j].sensors[k].name, locations[i].sectors[j].name,
-                locations[i].sectors[j].sensors[k].id, add_values / (float)locations[i].sectors[j].sensors[k].inspections_quantity
+                printf("Planta: %s Média de inspeção do sensor: %s do setor: %s id: %i média: %.4f %s. \n", 
+                locations[i].name, 
+                locations[i].sectors[j].sensors[k].name, 
+                locations[i].sectors[j].name,
+                locations[i].sectors[j].sensors[k].id, 
+                add_values / (float)locations[i].sectors[j].sensors[k].inspections_quantity,
+                sensor_type_unit[locations[i].sectors[j].sensors[k].sensor_type]
                 );
                 }else{
-                printf("O sensor: %s ainda não possui leituras\n", 
+                printf("O sensor: %s ainda não possui leituras.\n", 
                 locations[i].sectors[j].sensors[k].name);
                 }
             }
@@ -1137,7 +1196,7 @@ t_date_string convertTimestampToString(
 }
 bool isSameDay(time_t firstTimestamp, time_t secondTimestamp){
     struct tm *date_a = localtime(&firstTimestamp);
-    struct tm date_a_copy = *date_a; // copia antes do segundo localtime
+    struct tm date_a_copy = *date_a;
     struct tm *date_b = localtime(&secondTimestamp);
  
     return date_a_copy.tm_mday == date_b->tm_mday &&
@@ -1158,54 +1217,54 @@ void generateDataAndFulfillForTest(void){
     locations[0].sectors[0].sensors[0].sector_id = 1;
     strcpy(locations[0].sectors[0].sensors[0].name, "SENSOR TEMPERATURA FORNO");
     locations[0].sectors[0].sensors[0].sensor_type = TEMPERATURE;
-    locations[0].sectors[0].sensors[0].range_min = 100.0f;
-    locations[0].sectors[0].sensors[0].range_max = 500.0f;
+    locations[0].sectors[0].sensors[0].range_min = 100.0;
+    locations[0].sectors[0].sensors[0].range_max = 500.0;
     locations[0].sectors[0].sensors[0].inspections_quantity = 4;
     locations[0].sectors[0].sensors[0].inspections[0].id = 1;
     locations[0].sectors[0].sensors[0].inspections[0].sensor_id = 1;
-    locations[0].sectors[0].sensors[0].inspections[0].value = 320.5f;
+    locations[0].sectors[0].sensors[0].inspections[0].value = 320.5;
     locations[0].sectors[0].sensors[0].inspections[0].date_inspection = time(NULL) - 86400 - 3600; // ontem manhã
     locations[0].sectors[0].sensors[0].inspections[1].id = 2;
     locations[0].sectors[0].sensors[0].inspections[1].sensor_id = 1;
-    locations[0].sectors[0].sensors[0].inspections[1].value = 410.0f;
+    locations[0].sectors[0].sensors[0].inspections[1].value = 410.0;
     locations[0].sectors[0].sensors[0].inspections[1].date_inspection = time(NULL) - 86400 - 1800; // ontem tarde
     locations[0].sectors[0].sensors[0].inspections[2].id = 3;
     locations[0].sectors[0].sensors[0].inspections[2].sensor_id = 1;
-    locations[0].sectors[0].sensors[0].inspections[2].value = 280.0f;
+    locations[0].sectors[0].sensors[0].inspections[2].value = 280.0;
     locations[0].sectors[0].sensors[0].inspections[2].date_inspection = time(NULL) - 7200; // hoje manhã
     locations[0].sectors[0].sensors[0].inspections[3].id = 4;
     locations[0].sectors[0].sensors[0].inspections[3].sensor_id = 1;
-    locations[0].sectors[0].sensors[0].inspections[3].value = 460.0f;
+    locations[0].sectors[0].sensors[0].inspections[3].value = 460.0;
     locations[0].sectors[0].sensors[0].inspections[3].date_inspection = time(NULL) - 3600; // hoje tarde
     locations[0].sectors[0].sensors[1].id = 2;
     locations[0].sectors[0].sensors[1].sector_id = 1;
     strcpy(locations[0].sectors[0].sensors[1].name, "SENSOR VIBRACAO ESTEIRA");
     locations[0].sectors[0].sensors[1].sensor_type = VIBRATION;
-    locations[0].sectors[0].sensors[1].range_min = 0.0f;
-    locations[0].sectors[0].sensors[1].range_max = 50.0f;
+    locations[0].sectors[0].sensors[1].range_min = 0.0;
+    locations[0].sectors[0].sensors[1].range_max = 50.0;
     locations[0].sectors[0].sensors[1].inspections_quantity = 2;
     locations[0].sectors[0].sensors[1].inspections[0].id = 1;
     locations[0].sectors[0].sensors[1].inspections[0].sensor_id = 2;
-    locations[0].sectors[0].sensors[1].inspections[0].value = 11.0f;
+    locations[0].sectors[0].sensors[1].inspections[0].value = 11.0;
     locations[0].sectors[0].sensors[1].inspections[0].date_inspection = time(NULL) - 5400; // hoje
     locations[0].sectors[0].sensors[1].inspections[1].id = 2;
     locations[0].sectors[0].sensors[1].inspections[1].sensor_id = 2;
-    locations[0].sectors[0].sensors[1].inspections[1].value = 14.5f;
+    locations[0].sectors[0].sensors[1].inspections[1].value = 14.5;
     locations[0].sectors[0].sensors[1].inspections[1].date_inspection = time(NULL) - 1800; // hoje
     locations[0].sectors[0].sensors[2].id = 3;
     locations[0].sectors[0].sensors[2].sector_id = 1;
     strcpy(locations[0].sectors[0].sensors[2].name, "SENSOR PRESSAO COMPRESSOR");
     locations[0].sectors[0].sensors[2].sensor_type = PRESSURE;
-    locations[0].sectors[0].sensors[2].range_min = 5.0f;
-    locations[0].sectors[0].sensors[2].range_max = 150.0f;
+    locations[0].sectors[0].sensors[2].range_min = 5.0;
+    locations[0].sectors[0].sensors[2].range_max = 150.0;
     locations[0].sectors[0].sensors[2].inspections_quantity = 2;
     locations[0].sectors[0].sensors[2].inspections[0].id = 1;
     locations[0].sectors[0].sensors[2].inspections[0].sensor_id = 3;
-    locations[0].sectors[0].sensors[2].inspections[0].value = 90.0f;
+    locations[0].sectors[0].sensors[2].inspections[0].value = 90.0;
     locations[0].sectors[0].sensors[2].inspections[0].date_inspection = time(NULL) - 86400 - 3600; // ontem
     locations[0].sectors[0].sensors[2].inspections[1].id = 2;
     locations[0].sectors[0].sensors[2].inspections[1].sensor_id = 3;
-    locations[0].sectors[0].sensors[2].inspections[1].value = 105.0f;
+    locations[0].sectors[0].sensors[2].inspections[1].value = 105.0;
     locations[0].sectors[0].sensors[2].inspections[1].date_inspection = time(NULL) - 3600; // hoje
     locations[0].sectors[1].id = 2;
     locations[0].sectors[1].location_id = 1;
@@ -1221,11 +1280,11 @@ void generateDataAndFulfillForTest(void){
     locations[0].sectors[1].sensors[0].inspections_quantity = 2;
     locations[0].sectors[1].sensors[0].inspections[0].id = 1;
     locations[0].sectors[1].sensors[0].inspections[0].sensor_id = 1;
-    locations[0].sectors[1].sensors[0].inspections[0].value = 40.0f;
+    locations[0].sectors[1].sensors[0].inspections[0].value = 40.0;
     locations[0].sectors[1].sensors[0].inspections[0].date_inspection = time(NULL) - 7200; // hoje
     locations[0].sectors[1].sensors[0].inspections[1].id = 2;
     locations[0].sectors[1].sensors[0].inspections[1].sensor_id = 1;
-    locations[0].sectors[1].sensors[0].inspections[1].value = 130.0f;
+    locations[0].sectors[1].sensors[0].inspections[1].value = 130.0;
     locations[0].sectors[1].sensors[0].inspections[1].date_inspection = time(NULL) - 1800; // hoje
     locations[1].id = 2;
     strcpy(locations[1].name, "PLANTA CAMPINAS");
@@ -1239,40 +1298,40 @@ void generateDataAndFulfillForTest(void){
     locations[1].sectors[0].sensors[0].sector_id = 1;
     strcpy(locations[1].sectors[0].sensors[0].name, "SENSOR CORRENTE PAINEL A");
     locations[1].sectors[0].sensors[0].sensor_type = CURRENT;
-    locations[1].sectors[0].sensors[0].range_min = 1.0f; // evita divisão por zero na variação %
-    locations[1].sectors[0].sensors[0].range_max = 200.0f;
+    locations[1].sectors[0].sensors[0].range_min = 1.0;
+    locations[1].sectors[0].sensors[0].range_max = 200.0;
     locations[1].sectors[0].sensors[0].inspections_quantity = 4;
     locations[1].sectors[0].sensors[0].inspections[0].id = 1;
     locations[1].sectors[0].sensors[0].inspections[0].sensor_id = 1;
-    locations[1].sectors[0].sensors[0].inspections[0].value = 87.4f;
-    locations[1].sectors[0].sensors[0].inspections[0].date_inspection = time(NULL) - 172800 - 3600; // 2 dias atrás manhã
+    locations[1].sectors[0].sensors[0].inspections[0].value = 87.4;
+    locations[1].sectors[0].sensors[0].inspections[0].date_inspection = time(NULL) - 172800 - 3600;
     locations[1].sectors[0].sensors[0].inspections[1].id = 2;
     locations[1].sectors[0].sensors[0].inspections[1].sensor_id = 1;
-    locations[1].sectors[0].sensors[0].inspections[1].value = 95.0f;
-    locations[1].sectors[0].sensors[0].inspections[1].date_inspection = time(NULL) - 172800 - 1800; // 2 dias atrás tarde
+    locations[1].sectors[0].sensors[0].inspections[1].value = 95.0;
+    locations[1].sectors[0].sensors[0].inspections[1].date_inspection = time(NULL) - 172800 - 1800;
     locations[1].sectors[0].sensors[0].inspections[2].id = 3;
     locations[1].sectors[0].sensors[0].inspections[2].sensor_id = 1;
-    locations[1].sectors[0].sensors[0].inspections[2].value = 102.0f;
-    locations[1].sectors[0].sensors[0].inspections[2].date_inspection = time(NULL) - 5400; // hoje
+    locations[1].sectors[0].sensors[0].inspections[2].value = 102.0;
+    locations[1].sectors[0].sensors[0].inspections[2].date_inspection = time(NULL) - 5400;
     locations[1].sectors[0].sensors[0].inspections[3].id = 4;
     locations[1].sectors[0].sensors[0].inspections[3].sensor_id = 1;
-    locations[1].sectors[0].sensors[0].inspections[3].value = 178.0f;
-    locations[1].sectors[0].sensors[0].inspections[3].date_inspection = time(NULL) - 600; // hoje
+    locations[1].sectors[0].sensors[0].inspections[3].value = 178.0;
+    locations[1].sectors[0].sensors[0].inspections[3].date_inspection = time(NULL) - 600;
     locations[1].sectors[0].sensors[1].id = 2;
     locations[1].sectors[0].sensors[1].sector_id = 1;
     strcpy(locations[1].sectors[0].sensors[1].name, "SENSOR UMIDADE SALA TI");
     locations[1].sectors[0].sensors[1].sensor_type = HUMIDITY;
-    locations[1].sectors[0].sensors[1].range_min = 30.0f;
-    locations[1].sectors[0].sensors[1].range_max = 80.0f;
+    locations[1].sectors[0].sensors[1].range_min = 30.0;
+    locations[1].sectors[0].sensors[1].range_max = 80.0;
     locations[1].sectors[0].sensors[1].inspections_quantity = 2;
     locations[1].sectors[0].sensors[1].inspections[0].id = 1;
     locations[1].sectors[0].sensors[1].inspections[0].sensor_id = 2;
-    locations[1].sectors[0].sensors[1].inspections[0].value = 55.0f;
-    locations[1].sectors[0].sensors[1].inspections[0].date_inspection = time(NULL) - 7200; // hoje
+    locations[1].sectors[0].sensors[1].inspections[0].value = 55.0;
+    locations[1].sectors[0].sensors[1].inspections[0].date_inspection = time(NULL) - 7200;
     locations[1].sectors[0].sensors[1].inspections[1].id = 2;
     locations[1].sectors[0].sensors[1].inspections[1].sensor_id = 2;
-    locations[1].sectors[0].sensors[1].inspections[1].value = 72.0f;
-    locations[1].sectors[0].sensors[1].inspections[1].date_inspection = time(NULL) - 1800; // hoje
+    locations[1].sectors[0].sensors[1].inspections[1].value = 72.0;
+    locations[1].sectors[0].sensors[1].inspections[1].date_inspection = time(NULL) - 1800;
     locations[1].sectors[1].id = 2;
     locations[1].sectors[1].location_id = 2;
     strcpy(locations[1].sectors[1].name, "REFRIGERACAO");
@@ -1282,8 +1341,8 @@ void generateDataAndFulfillForTest(void){
     locations[1].sectors[1].sensors[0].sector_id = 2;
     strcpy(locations[1].sectors[1].sensors[0].name, "SENSOR TEMPERATURA CHILLER");
     locations[1].sectors[1].sensors[0].sensor_type = TEMPERATURE;
-    locations[1].sectors[1].sensors[0].range_min = -10.0f;
-    locations[1].sectors[1].sensors[0].range_max = 25.0f;
+    locations[1].sectors[1].sensors[0].range_min = -10.0;
+    locations[1].sectors[1].sensors[0].range_max = 25.0;
     locations[1].sectors[1].sensors[0].inspections_quantity = 0;
     locations_quantity = 2;
 }

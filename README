@@ -18,12 +18,12 @@ A relação aqui é Planta contém Setores, Setores contém Sensores, cada plant
 
 ## 2. Funcionalidades (João)
 
-- [] Relatório de setores
-- [] Relatório de leituras (por local e por todos os locais)
-- [] Relatório de variação de leitura (por setor e por sensor)
-- [] Relatório de médias de leitura por sensor considerando todos os setores
-- [] Pesquisar sensor por tipo
-- [] Pesquisar setor por descrição
+- [x] Relatório de setores
+- [x] Relatório de leituras (por local e por todos os locais)
+- [x] Relatório de variação de leitura (por setor e por sensor)
+- [x] Relatório de médias de leitura por sensor considerando todos os setores
+- [x] Pesquisar sensor por tipo
+- [x] Pesquisar setor por descrição
 
 ## 3. Extras (Marlon)
 - [x] Menu
