@@ -1146,19 +1146,14 @@ bool isSameDay(time_t firstTimestamp, time_t secondTimestamp){
 }
 
 void generateDataAndFulfillForTest(void){
-    // ── PLANTA 1: SÃO PAULO ──────────────────────────────────────────
     locations[0].id = 1;
     strcpy(locations[0].name, "PLANTA SAO PAULO");
     locations[0].sectors_quantity = 2;
-
-    // Setor 1: PRODUÇÃO
     locations[0].sectors[0].id = 1;
     locations[0].sectors[0].location_id = 1;
     strcpy(locations[0].sectors[0].name, "PRODUCAO");
     strcpy(locations[0].sectors[0].description, "AREA PRINCIPAL DE PRODUCAO");
     locations[0].sectors[0].sensors_quantity = 3;
-
-    // Sensor 1: Temperatura — 2 leituras hoje + 2 ontem
     locations[0].sectors[0].sensors[0].id = 1;
     locations[0].sectors[0].sensors[0].sector_id = 1;
     strcpy(locations[0].sectors[0].sensors[0].name, "SENSOR TEMPERATURA FORNO");
@@ -1182,8 +1177,6 @@ void generateDataAndFulfillForTest(void){
     locations[0].sectors[0].sensors[0].inspections[3].sensor_id = 1;
     locations[0].sectors[0].sensors[0].inspections[3].value = 460.0f;
     locations[0].sectors[0].sensors[0].inspections[3].date_inspection = time(NULL) - 3600; // hoje tarde
-
-    // Sensor 2: Vibração — 2 leituras hoje (variação pequena)
     locations[0].sectors[0].sensors[1].id = 2;
     locations[0].sectors[0].sensors[1].sector_id = 1;
     strcpy(locations[0].sectors[0].sensors[1].name, "SENSOR VIBRACAO ESTEIRA");
@@ -1199,8 +1192,6 @@ void generateDataAndFulfillForTest(void){
     locations[0].sectors[0].sensors[1].inspections[1].sensor_id = 2;
     locations[0].sectors[0].sensors[1].inspections[1].value = 14.5f;
     locations[0].sectors[0].sensors[1].inspections[1].date_inspection = time(NULL) - 1800; // hoje
-
-    // Sensor 3: Pressão — 1 leitura ontem, 1 hoje (dias diferentes, não deve aparecer na variação)
     locations[0].sectors[0].sensors[2].id = 3;
     locations[0].sectors[0].sensors[2].sector_id = 1;
     strcpy(locations[0].sectors[0].sensors[2].name, "SENSOR PRESSAO COMPRESSOR");
@@ -1216,15 +1207,11 @@ void generateDataAndFulfillForTest(void){
     locations[0].sectors[0].sensors[2].inspections[1].sensor_id = 3;
     locations[0].sectors[0].sensors[2].inspections[1].value = 105.0f;
     locations[0].sectors[0].sensors[2].inspections[1].date_inspection = time(NULL) - 3600; // hoje
-
-    // Setor 2: UTILIDADES
     locations[0].sectors[1].id = 2;
     locations[0].sectors[1].location_id = 1;
     strcpy(locations[0].sectors[1].name, "UTILIDADES");
     strcpy(locations[0].sectors[1].description, "AREA DE VAPOR E AR COMPRIMIDO");
     locations[0].sectors[1].sensors_quantity = 1;
-
-    // Sensor 1: Pressão caldeira — 2 leituras hoje (variação grande)
     locations[0].sectors[1].sensors[0].id = 1;
     locations[0].sectors[1].sensors[0].sector_id = 2;
     strcpy(locations[0].sectors[1].sensors[0].name, "SENSOR PRESSAO CALDEIRA");
@@ -1240,20 +1227,14 @@ void generateDataAndFulfillForTest(void){
     locations[0].sectors[1].sensors[0].inspections[1].sensor_id = 1;
     locations[0].sectors[1].sensors[0].inspections[1].value = 130.0f;
     locations[0].sectors[1].sensors[0].inspections[1].date_inspection = time(NULL) - 1800; // hoje
-
-    // ── PLANTA 2: CAMPINAS ───────────────────────────────────────────
     locations[1].id = 2;
     strcpy(locations[1].name, "PLANTA CAMPINAS");
     locations[1].sectors_quantity = 2;
-
-    // Setor 1: ELÉTRICA
     locations[1].sectors[0].id = 1;
     locations[1].sectors[0].location_id = 2;
     strcpy(locations[1].sectors[0].name, "ELETRICA");
     strcpy(locations[1].sectors[0].description, "PAINEL DE DISTRIBUICAO ELETRICA");
     locations[1].sectors[0].sensors_quantity = 2;
-
-    // Sensor 1: Corrente — 2 leituras hoje
     locations[1].sectors[0].sensors[0].id = 1;
     locations[1].sectors[0].sensors[0].sector_id = 1;
     strcpy(locations[1].sectors[0].sensors[0].name, "SENSOR CORRENTE PAINEL A");
@@ -1277,8 +1258,6 @@ void generateDataAndFulfillForTest(void){
     locations[1].sectors[0].sensors[0].inspections[3].sensor_id = 1;
     locations[1].sectors[0].sensors[0].inspections[3].value = 178.0f;
     locations[1].sectors[0].sensors[0].inspections[3].date_inspection = time(NULL) - 600; // hoje
-
-    // Sensor 2: Umidade — 2 leituras hoje
     locations[1].sectors[0].sensors[1].id = 2;
     locations[1].sectors[0].sensors[1].sector_id = 1;
     strcpy(locations[1].sectors[0].sensors[1].name, "SENSOR UMIDADE SALA TI");
@@ -1294,15 +1273,11 @@ void generateDataAndFulfillForTest(void){
     locations[1].sectors[0].sensors[1].inspections[1].sensor_id = 2;
     locations[1].sectors[0].sensors[1].inspections[1].value = 72.0f;
     locations[1].sectors[0].sensors[1].inspections[1].date_inspection = time(NULL) - 1800; // hoje
-
-    // Setor 2: REFRIGERAÇÃO
     locations[1].sectors[1].id = 2;
     locations[1].sectors[1].location_id = 2;
     strcpy(locations[1].sectors[1].name, "REFRIGERACAO");
     strcpy(locations[1].sectors[1].description, "SISTEMA DE RESFRIAMENTO INDUSTRIAL");
     locations[1].sectors[1].sensors_quantity = 1;
-
-    // Sensor 1: Temperatura — sem leituras (testa o caso de sensor vazio)
     locations[1].sectors[1].sensors[0].id = 1;
     locations[1].sectors[1].sensors[0].sector_id = 2;
     strcpy(locations[1].sectors[1].sensors[0].name, "SENSOR TEMPERATURA CHILLER");
@@ -1310,6 +1285,5 @@ void generateDataAndFulfillForTest(void){
     locations[1].sectors[1].sensors[0].range_min = -10.0f;
     locations[1].sectors[1].sensors[0].range_max = 25.0f;
     locations[1].sectors[1].sensors[0].inspections_quantity = 0;
-
     locations_quantity = 2;
 }
