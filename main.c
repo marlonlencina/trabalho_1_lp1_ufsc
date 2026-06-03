@@ -551,21 +551,23 @@ t_sensor createNewSensor(void){
     int number_typed;
     scanf("%i", &number_typed);
     getchar();
+    int is_number_typed_valid = number_typed == 0 || number_typed == 1 || number_typed == 2 || number_typed == 3 || number_typed == 4;
+
+    if(!is_number_typed_valid){
+        new_sensor.id = NOT_FOUND;
+        printf("Erro: você não digitou um número válido para o tipo do sensor. \n");
+        return new_sensor;
+    }
+
+    new_sensor.sensor_type = number_typed;
     printf("Digite o range mínimo do sensor: \n");
     scanf("%f", &new_sensor.range_min); 
     getchar();
     printf("Digite o range máximo do sensor: \n");
     scanf("%f", &new_sensor.range_max); 
     getchar();
-    int is_number_typed_valid = number_typed == 0 || number_typed == 1 || number_typed == 2 || number_typed == 3 || number_typed == 4;
-    if(is_number_typed_valid){
-        new_sensor.sensor_type = number_typed;
-        printf("Novo sensor (Sensor) Criado com sucesso. \n");
-    } else {
-        new_sensor.id = NOT_FOUND;
-        printf("Erro: você não digitou um número válido para o tipo do sensor. \n");
-        return new_sensor;
-    }
+    
+    printf("Novo sensor (Sensor) Criado com sucesso. \n");
     return new_sensor;
 }
 t_sensor findSensorStruct(int sensor_id){
@@ -1119,46 +1121,40 @@ void resetStatesSelected(entities entity){
     }
 }
 bool checkExistenceId(int id, entities entity){
-    int hasFoundId = 0;
+    bool hasFoundId = false;
     switch(entity){
         case LOCATION: 
-            for(int i = 0; i < locations_quantity; i++){
-                if(locations[i].id == id){
-                    hasFoundId = 1;
-                }
+        {
+            t_location location = findLocationStruct(id);
+            if(location.id != NOT_FOUND){
+                hasFoundId = true;
             }
             break;
+        }
         case SECTOR:
-            for(int i = 0; i < locations[location_selected_idx].sectors_quantity; i++){
-                if(locations[location_selected_idx].sectors[i].id == id){
-                    hasFoundId = 1;
-                }
+        {
+            t_sector sector = findSectorStruct(id);
+            if(sector.id != NOT_FOUND){
+                hasFoundId = true;
             }
             break;
+        }
         case SENSOR:
-            for(int i = 0; i < locations[location_selected_idx]
-                .sectors[sector_selected_idx]
-                .sensors_quantity; i++){
-                if(locations[location_selected_idx]
-                    .sectors[sector_selected_idx]
-                    .sensors[i].id == id){
-                    hasFoundId = 1;
-                }
+        {
+            t_sensor sensor = findSensorStruct(id);
+            if(sensor.id != NOT_FOUND){
+                hasFoundId = true;
             }
             break;
+        }
         case INSPECTION:
-            for(int i = 0; i < locations[location_selected_idx]
-                .sectors[sector_selected_idx]
-                .sensors[sensor_selected_idx]
-                .inspections_quantity; i++){
-                if(locations[location_selected_idx]
-                    .sectors[sector_selected_idx]
-                    .sensors[sensor_selected_idx]
-                    .inspections[i].id == id){
-                    hasFoundId = 1;
-                }
+        {
+            t_inspection inspection = findInspectionStruct(id);
+            if(inspection.id != NOT_FOUND){
+                hasFoundId = true;
             }
             break;
+        }
     }
     return hasFoundId;
 }
