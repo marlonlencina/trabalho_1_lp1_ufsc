@@ -408,7 +408,6 @@ t_location findLocationStruct(int location_id){
             return location;
         }
     }
-    if(location.id == NOT_FOUND) printf("Erro: Nenhuma planta encontrado. \n");
     return location;
 }
 void listAllLocations(void){
@@ -416,7 +415,6 @@ void listAllLocations(void){
         printf("Não existem plantas disponíveis. \n");
         return;
     }
-    printf("Total de locations: %i. \n", locations_quantity);
     for(int i = 0; i < locations_quantity; i++){
         printf("ID: %i, Nome: %s. \n", locations[i].id, locations[i].name);
     }
@@ -478,7 +476,6 @@ t_sector findSectorStruct(int sector_id){
             return sector;
         }
     }
-    if(sector.id == NOT_FOUND) printf("Erro: Nenhum setor encontrado. \n");
     return sector;
 }
 void listAllSectorsFromLocation(){
@@ -503,6 +500,7 @@ void selectSector(void){
     printf("Digite o id do setor (Sector): \n");
     int sector_id;
     scanf("%i", &sector_id);
+    getchar();
     int sectorIsValid = checkExistenceId(sector_id, SECTOR);
     if(sectorIsValid){
         sector_selected_idx = findSectorIdx(sector_id);
@@ -578,7 +576,6 @@ t_sensor findSensorStruct(int sensor_id){
             return sensor;
         }
     }
-    if(sensor.id == NOT_FOUND) printf("Erro: Nenhum sensor encontrado. \n");
     return sensor;
 }
 void listAllSensorsFromSector(){
@@ -625,6 +622,7 @@ void selectSensor(void){
     printf("Digite o id do sensor (Sensor): \n");
     int sensor_id;
     scanf("%i", &sensor_id);
+    getchar();
     int sensorIsValid = checkExistenceId(sensor_id, SENSOR);
     if(sensorIsValid){
         sensor_selected_idx = findSensorIdx(sensor_id);
@@ -702,7 +700,6 @@ t_inspection findInspectionStruct(int inspection_id){
             return inspection;
         }
     }
-    if(inspection.id == NOT_FOUND) printf("Erro: Nenhuma leitura encontrado. \n");
     return inspection;
 }
 void listAllInspectionsFromSensor(){
@@ -878,13 +875,13 @@ void generateReportOfInspections(void){
         int option_location;
         printf("Escolha um local. \n");
         for(int i = 0; i < locations_quantity; i++){
-            printf("%i. Nome: %s. \n", i, locations[i].name);
+            printf("%i. Nome: %s. \n", locations[i].id, locations[i].name);
         }
         printf("Digite a opção: \n");
         scanf("%i", &option_location);
  
         for(int i = 0; i < locations_quantity; i++){
-                if(i != option_location) continue;
+                if(locations[i].id != option_location) continue;
                     for(int j = 0; j < locations[i].sectors_quantity; j++){
                         for(int k = 0; k < locations[i].sectors[j].sensors_quantity; k++){
                             for(int l = 0; l < locations[i].sectors[j].sensors[k].inspections_quantity; l++){
@@ -1081,13 +1078,6 @@ void generateReportOfSensors(void){
                         locations[i].sectors[j].sensors[k].range_min, locations[i].sectors[j].sensors[k].range_max,
                         locations[i].sectors[j].sensors[k].inspections_quantity
                         );
-                        printf("Id: %i\nNome: %s \nTipo: %s \nMin/Max: [%.3f/%.3f] \nTotal de leituras: %i\n", 
-                        locations[i].sectors[j].sensors[k].id,
-                        locations[i].sectors[j].sensors[k].name,
-                        sensor_type_string[locations[i].sectors[j].sensors[k].sensor_type], 
-                        locations[i].sectors[j].sensors[k].range_min, locations[i].sectors[j].sensors[k].range_max,
-                        locations[i].sectors[j].sensors[k].inspections_quantity
-                        );
 
                         printf("\n");
                     }
@@ -1211,6 +1201,7 @@ bool checkExistenceId(int id, entities entity){
     return hasFoundId;
 }
 void removeEnterFromString(string str){
+    if(strlen(str) < 1) return;
     str[strlen(str) - 1] = '\0';
 }
 void formatToUpperString(string str){
