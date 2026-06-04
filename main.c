@@ -816,6 +816,7 @@ void searchForSensorType(void){
     printf("Digite a opção: \n");
  
     scanf("%i", &sensor_type_option);
+    getchar();
  
     for(int i = 0; i < locations_quantity; i++){
         for(int j = 0; j < locations[i].sectors_quantity; j++){
@@ -919,8 +920,12 @@ void generateReportOfInspectionsVariation(void){
  
     if(option == 0){
         selectLocation();
+        if(location_selected_idx == NOT_FOUND) return;
         printf("# Planta: %s \n", locations[location_selected_idx].name);
         selectSector();
+        if(sector_selected_idx == NOT_FOUND) return;
+        printf("# Setor: %s \n", locations[location_selected_idx].sectors[sector_selected_idx].name);
+
         for(int k = 0; k < locations[location_selected_idx].sectors[sector_selected_idx].sensors_quantity; k++){
                         t_sensor sensor = locations[location_selected_idx].sectors[sector_selected_idx].sensors[k];
                         for(int m = 0; m < sensor.inspections_quantity; m++){
@@ -970,7 +975,12 @@ void generateReportOfInspectionsVariation(void){
         selectLocation();
         printf("# Planta: %s \n", locations[location_selected_idx].name);
         selectSector();
+        if(sector_selected_idx == NOT_FOUND) return;
+        printf("# Setor: %s \n", locations[location_selected_idx].sectors[sector_selected_idx].name);
         selectSensor();
+        if(sensor_selected_idx == NOT_FOUND) return;
+        printf("# Sensor: %s \n", locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx].name);
+
         t_sensor sensor = locations[location_selected_idx].sectors[sector_selected_idx].sensors[sensor_selected_idx];
         for(int m = 0; m < sensor.inspections_quantity; m++){
                 for(int n = m + 1; n < sensor.inspections_quantity; n++){
@@ -1058,6 +1068,7 @@ void generateReportOfSensors(void){
     printf("1. Por tipo\n");
     printf("Digite a opção: \n");
     scanf("%i", &option);
+    getchar();
  
     int is_option_valid = option == 0 || option == 1;
     if(!is_option_valid){
